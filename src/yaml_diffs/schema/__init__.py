@@ -36,6 +36,9 @@ def load_schema() -> dict[str, Any]:
 def get_schema_version() -> str:
     """Get the version of the OpenSpec schema.
 
+    Supports both JSON Schema format (top-level 'version') and OpenAPI format
+    (info.version).
+
     Returns:
         Schema version string.
 
@@ -45,9 +48,13 @@ def get_schema_version() -> str:
         yaml.YAMLError: If the schema file is invalid YAML.
     """
     schema = load_schema()
-    if "version" not in schema:
-        raise KeyError("Schema version not defined")
-    return schema["version"]  # type: ignore[no-any-return]
+    # Check for JSON Schema format (top-level version)
+    if "version" in schema:
+        return schema["version"]  # type: ignore[no-any-return]
+    # Check for OpenAPI format (info.version)
+    if "info" in schema and isinstance(schema["info"], dict) and "version" in schema["info"]:
+        return schema["info"]["version"]  # type: ignore[no-any-return]
+    raise KeyError("Schema version not defined")
 
 
 __all__ = ["load_schema", "get_schema_version"]

@@ -33,13 +33,16 @@ from yaml_diffs.schema import load_schema
 
 
 def _validate_uri(instance: str) -> bool:
-    """Validate URI format.
+    """Validate absolute URI format.
+
+    Validates that the string is a well-formed absolute URI (must have both
+    scheme and netloc components). Relative URIs are not considered valid.
 
     Args:
-        instance: String to validate as URI.
+        instance: String to validate as absolute URI.
 
     Returns:
-        True if valid URI, False otherwise.
+        True if valid absolute URI, False otherwise.
     """
     try:
         result = urlparse(instance)

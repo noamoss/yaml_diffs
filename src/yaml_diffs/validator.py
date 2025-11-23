@@ -15,8 +15,9 @@ try:
 except ImportError:
     JSONSCHEMA_AVAILABLE = False
     # These are only used when JSONSCHEMA_AVAILABLE is True
-    FormatChecker = None
-    Draft202012Validator = None
+    # Type ignore needed because we assign None to imported types
+    FormatChecker = None  # type: ignore[assignment, misc]
+    Draft202012Validator = None  # type: ignore[assignment, misc]
 
 from pydantic import ValidationError as PydanticValidationErrorBase
 
@@ -104,8 +105,9 @@ def _get_format_checker() -> FormatChecker:
         )
 
     format_checker = FormatChecker()
-    format_checker.checks("uri")(_validate_uri)
-    format_checker.checks("date-time")(_validate_date_time)
+    # Type ignore needed for FormatChecker.checks() type variable limitation
+    format_checker.checks("uri")(_validate_uri)  # type: ignore[type-var, misc]
+    format_checker.checks("date-time")(_validate_date_time)  # type: ignore[type-var, misc]
     return format_checker
 
 

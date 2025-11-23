@@ -61,7 +61,8 @@ def _validate_date_time(instance: str) -> bool:
     """
     # Handle timezone with colon separator (e.g., +05:30)
     # Python's strptime only supports +HHMM or -HHMM, not +HH:MM
-    # Use regex to check for timezone pattern before normalizing
+    # Check for timezone pattern before normalizing (re.search is technically
+    # redundant with re.sub, but improves readability by making intent explicit)
     match = re.search(r"([+-]\d{2}):(\d{2})$", instance)
     if match:
         # Replace +HH:MM or -HH:MM with +HHMM or -HHMM

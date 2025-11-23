@@ -97,6 +97,7 @@ def load_yaml(file_like: TextIO | str) -> dict[str, Any]:
 
     Raises:
         YAMLLoadError: If the YAML cannot be parsed. This includes:
+            - OSError: I/O errors from file-like objects (e.g., file not found, permission denied)
             - yaml.YAMLError: Invalid YAML syntax
             - ValueError: If file_like is neither TextIO nor str
 
@@ -118,6 +119,12 @@ def load_yaml(file_like: TextIO | str) -> dict[str, Any]:
             raw_data = yaml.safe_load(file_like)
         else:
             raise ValueError(f"file_like must be str or TextIO, got {type(file_like).__name__}")
+    except OSError as e:
+        # Handle I/O errors from file-like objects (e.g., file not found, permission denied)
+        raise YAMLLoadError(
+            f"Failed to read from file-like object. Error: {str(e)}",
+            original_error=e,
+        ) from e
     except yaml.YAMLError as e:
         raise YAMLLoadError(
             f"Failed to parse YAML content. Error: {str(e)}",

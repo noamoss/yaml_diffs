@@ -27,7 +27,7 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 ### Prerequisites
 
 - Python 3.9 or higher
-- pip (Python package manager)
+- uv (install via: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Git
 
 ### Initial Setup
@@ -37,11 +37,15 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 git clone https://github.com/noamoss/yaml_diffs.git
 cd yaml_diffs
 
-# Install dependencies (when available)
-pip install -e ".[dev]"
+# Create virtual environment and install dependencies
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Or install from pyproject.toml
-pip install -e .
+# Install in development mode (includes dev dependencies)
+uv sync --extra dev
+
+# Or install without dev dependencies
+uv sync
 ```
 
 ### Environment Variables
@@ -110,7 +114,7 @@ yaml-diffs/
 
 ```bash
 # Install in development mode
-pip install -e ".[dev]"
+uv sync --extra dev
 
 # Run all tests
 pytest
@@ -141,7 +145,7 @@ ruff format src/ tests/
 python -m build
 
 # Install from built package
-pip install dist/yaml_diffs-*.whl
+uv pip install dist/yaml_diffs-*.whl
 ```
 
 ### CLI Usage

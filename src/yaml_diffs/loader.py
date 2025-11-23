@@ -8,7 +8,11 @@ from typing import Any, TextIO
 import yaml  # type: ignore[import-untyped]
 from pydantic import ValidationError as PydanticValidationErrorBase
 
-from yaml_diffs.exceptions import PydanticValidationError, YAMLLoadError
+from yaml_diffs.exceptions import (
+    PydanticValidationError,
+    YAMLLoadError,
+    format_pydantic_errors,
+)
 from yaml_diffs.models import Document
 
 
@@ -81,11 +85,12 @@ def load_yaml_file(file_path: str | Path) -> dict[str, Any]:
 def load_yaml(file_like: TextIO | str) -> dict[str, Any]:
     """Load YAML from file-like object or string.
 
-    Parses YAML content from either a file-like object (TextIO) or a string.
-    Uses yaml.safe_load() for secure parsing.
+    Parses YAML content from either a file-like object (any object with a `read()`
+    method) or a string. Uses yaml.safe_load() for secure parsing.
 
     Args:
-        file_like: File-like object (TextIO) or string containing YAML content.
+        file_like: File-like object (any object with a `read()` method) or string
+            containing YAML content.
 
     Returns:
         Dictionary containing the parsed YAML data.
@@ -103,31 +108,32 @@ def load_yaml(file_like: TextIO | str) -> dict[str, Any]:
         >>> with open("file.yaml") as f:
         ...     data = load_yaml(f)
     """
+    # Check type first, then parse YAML
     try:
         if isinstance(file_like, str):
             raw_data = yaml.safe_load(file_like)
         elif hasattr(file_like, "read"):
-            # File-like object
+            # File-like object - yaml.safe_load can handle it directly
             raw_data = yaml.safe_load(file_like)
         else:
             raise ValueError(f"file_like must be str or TextIO, got {type(file_like).__name__}")
-
-        if raw_data is None:
-            raise YAMLLoadError(
-                "YAML content is empty or contains only null",
-            )
-
-        if not isinstance(raw_data, dict):
-            raise YAMLLoadError(
-                f"YAML content must be a dictionary, got {type(raw_data).__name__}",
-            )
-
-        return raw_data
     except yaml.YAMLError as e:
         raise YAMLLoadError(
             f"Failed to parse YAML content. Error: {str(e)}",
             original_error=e,
         ) from e
+
+    if raw_data is None:
+        raise YAMLLoadError(
+            "YAML content is empty or contains only null",
+        )
+
+    if not isinstance(raw_data, dict):
+        raise YAMLLoadError(
+            f"YAML content must be a dictionary, got {type(raw_data).__name__}",
+        )
+
+    return raw_data
 
 
 def load_document(file_path: str | Path | TextIO) -> Document:
@@ -174,25 +180,7 @@ def load_document(file_path: str | Path | TextIO) -> Document:
         return Document.model_validate(document_data)  # type: ignore[no-any-return]
     except PydanticValidationErrorBase as e:
         # Convert Pydantic errors to our custom exception
-        error_messages = []
-        error_details = []
-
-        for error in e.errors():
-            field_path = " -> ".join(str(loc) for loc in error["loc"])
-            error_msg = f"{field_path}: {error['msg']}"
-            error_messages.append(error_msg)
-            error_details.append(
-                {
-                    "field": field_path,
-                    "message": error["msg"],
-                    "type": error["type"],
-                    "input": error.get("input"),
-                }
-            )
-
-        message = "Document validation failed:\n" + "\n".join(
-            f"  - {msg}" for msg in error_messages
-        )
+        message, error_details = format_pydantic_errors(e, prefix="Document validation failed")
         raise PydanticValidationError(
             message,
             errors=error_details,

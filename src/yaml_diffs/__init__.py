@@ -6,6 +6,7 @@ from yaml_diffs.exceptions import (
     PydanticValidationError,
     ValidationError,
     YAMLLoadError,
+    format_pydantic_errors,
 )
 from yaml_diffs.loader import load_document, load_yaml, load_yaml_file
 from yaml_diffs.validator import (
@@ -21,6 +22,8 @@ __all__ = [
     "ValidationError",
     "OpenSpecValidationError",
     "PydanticValidationError",
+    # Utilities
+    "format_pydantic_errors",
     # Loader functions
     "load_yaml_file",
     "load_yaml",

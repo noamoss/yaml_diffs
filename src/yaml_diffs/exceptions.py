@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import ValidationError as PydanticValidationErrorBase
+
 
 class YAMLLoadError(Exception):
     """Exception raised when YAML file cannot be loaded or parsed.
@@ -118,3 +120,35 @@ class PydanticValidationError(ValidationError):
         """
         super().__init__(message, errors)
         self.original_error = original_error
+
+
+def format_pydantic_errors(
+    error: PydanticValidationErrorBase, prefix: str = "Validation failed"
+) -> tuple[str, list[dict[str, Any]]]:
+    """Format Pydantic validation errors into a readable message and error details.
+
+    Args:
+        error: Pydantic ValidationError instance.
+        prefix: Prefix for the error message (default: "Validation failed").
+
+    Returns:
+        Tuple of (formatted_message, error_details_list).
+    """
+    error_messages = []
+    error_details = []
+
+    for err in error.errors():
+        field_path = " -> ".join(str(loc) for loc in err["loc"])
+        error_msg = f"{field_path}: {err['msg']}"
+        error_messages.append(error_msg)
+        error_details.append(
+            {
+                "field": field_path,
+                "message": err["msg"],
+                "type": err["type"],
+                "input": err.get("input"),
+            }
+        )
+
+    message = f"{prefix}:\n" + "\n".join(f"  - {msg}" for msg in error_messages)
+    return message, error_details

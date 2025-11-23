@@ -20,7 +20,11 @@ except ImportError:
 
 from pydantic import ValidationError as PydanticValidationErrorBase
 
-from yaml_diffs.exceptions import OpenSpecValidationError, PydanticValidationError
+from yaml_diffs.exceptions import (
+    OpenSpecValidationError,
+    PydanticValidationError,
+    format_pydantic_errors,
+)
 from yaml_diffs.loader import load_yaml, load_yaml_file
 from yaml_diffs.models import Document
 from yaml_diffs.schema import load_schema
@@ -39,7 +43,8 @@ def _validate_uri(instance: str) -> bool:
         result = urlparse(instance)
         # Basic URI validation: must have scheme and netloc for absolute URIs
         return bool(result.scheme and result.netloc)
-    except Exception:
+    except (ValueError, AttributeError, TypeError):
+        # urlparse can raise these for invalid input types
         return False
 
 
@@ -52,6 +57,18 @@ def _validate_date_time(instance: str) -> bool:
     Returns:
         True if valid ISO 8601 date-time, False otherwise.
     """
+    import re
+
+    # Handle timezone with colon separator (e.g., +05:30)
+    # Python's strptime only supports +HHMM or -HHMM, not +HH:MM
+    normalized_instance = instance
+    if len(instance) >= 6 and ":" in instance[-6:]:
+        # Check if last 6 chars contain a timezone pattern like +05:30 or -05:30
+        match = re.search(r"([+-]\d{2}):(\d{2})$", instance)
+        if match:
+            # Replace +HH:MM or -HH:MM with +HHMM or -HHMM
+            normalized_instance = re.sub(r"([+-])(\d{2}):(\d{2})$", r"\1\2\3", instance)
+
     # Try common ISO 8601 formats
     formats = [
         "%Y-%m-%dT%H:%M:%S",
@@ -64,7 +81,7 @@ def _validate_date_time(instance: str) -> bool:
     ]
     for fmt in formats:
         try:
-            datetime.strptime(instance, fmt)
+            datetime.strptime(normalized_instance, fmt)
             return True
         except ValueError:
             continue
@@ -204,25 +221,7 @@ def validate_against_pydantic(data: dict[str, Any]) -> Document:
         return Document.model_validate(document_data)  # type: ignore[no-any-return]
     except PydanticValidationErrorBase as e:
         # Convert Pydantic errors to our custom exception
-        error_messages = []
-        error_details = []
-
-        for error in e.errors():
-            field_path = " -> ".join(str(loc) for loc in error["loc"])
-            error_msg = f"{field_path}: {error['msg']}"
-            error_messages.append(error_msg)
-            error_details.append(
-                {
-                    "field": field_path,
-                    "message": error["msg"],
-                    "type": error["type"],
-                    "input": error.get("input"),
-                }
-            )
-
-        message = "Pydantic validation failed:\n" + "\n".join(
-            f"  - {msg}" for msg in error_messages
-        )
+        message, error_details = format_pydantic_errors(e, prefix="Pydantic validation failed")
         raise PydanticValidationError(
             message,
             errors=error_details,

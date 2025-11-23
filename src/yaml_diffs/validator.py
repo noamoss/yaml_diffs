@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, TextIO
@@ -58,17 +59,15 @@ def _validate_date_time(instance: str) -> bool:
     Returns:
         True if valid ISO 8601 date-time, False otherwise.
     """
-    import re
-
     # Handle timezone with colon separator (e.g., +05:30)
     # Python's strptime only supports +HHMM or -HHMM, not +HH:MM
-    normalized_instance = instance
-    if len(instance) >= 6 and ":" in instance[-6:]:
-        # Check if last 6 chars contain a timezone pattern like +05:30 or -05:30
-        match = re.search(r"([+-]\d{2}):(\d{2})$", instance)
-        if match:
-            # Replace +HH:MM or -HH:MM with +HHMM or -HHMM
-            normalized_instance = re.sub(r"([+-])(\d{2}):(\d{2})$", r"\1\2\3", instance)
+    # Use regex to check for timezone pattern before normalizing
+    match = re.search(r"([+-]\d{2}):(\d{2})$", instance)
+    if match:
+        # Replace +HH:MM or -HH:MM with +HHMM or -HHMM
+        normalized_instance = re.sub(r"([+-])(\d{2}):(\d{2})$", r"\1\2\3", instance)
+    else:
+        normalized_instance = instance
 
     # Try common ISO 8601 formats
     formats = [

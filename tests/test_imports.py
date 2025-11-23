@@ -30,7 +30,8 @@ def test_dependencies_importable():
     import pydantic
     import yaml
 
-    # Just verify they're importable, don't need to use them
-    assert pydantic is not None
-    assert yaml is not None
-    assert fastapi is not None
+    # Verify they have expected attributes/functionality
+    assert hasattr(pydantic, "BaseModel")
+    assert hasattr(yaml, "safe_load")
+    assert hasattr(fastapi, "FastAPI")
+

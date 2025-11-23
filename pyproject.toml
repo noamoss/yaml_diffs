@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Noam Oss", email = "noam@example.com"}
+    {name = "Noam Oss", email = "noam@thepitz.studio"}
 ]
 keywords = ["yaml", "legal-documents", "hebrew", "diff", "validation"]
 classifiers = [
@@ -77,7 +77,7 @@ exclude_lines = [
     "def __repr__",
     "raise AssertionError",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:",
+    "if __name__ == .__main__.:",  # Regex pattern: . matches any character (handles both single and double quotes)
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]

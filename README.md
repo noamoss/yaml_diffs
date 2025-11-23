@@ -50,6 +50,8 @@ pre-commit install
 
 ## Project Structure
 
+> **Note**: The structure below shows the planned/expected project layout. Some files and directories are not yet implemented and will be added in future phases.
+
 ```
 yaml-diffs/
 ├── src/

@@ -109,6 +109,7 @@ def load_yaml(file_like: TextIO | str) -> dict[str, Any]:
         ...     data = load_yaml(f)
     """
     # Check type first, then parse YAML
+    raw_data = None  # Initialize for clarity and static analysis
     try:
         if isinstance(file_like, str):
             raw_data = yaml.safe_load(file_like)

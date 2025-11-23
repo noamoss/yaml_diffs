@@ -127,12 +127,23 @@ def format_pydantic_errors(
 ) -> tuple[str, list[dict[str, Any]]]:
     """Format Pydantic validation errors into a readable message and error details.
 
+    This function is part of the public API and can be used to format Pydantic
+    validation errors for custom error handling or display purposes.
+
     Args:
         error: Pydantic ValidationError instance.
         prefix: Prefix for the error message (default: "Validation failed").
 
     Returns:
         Tuple of (formatted_message, error_details_list).
+
+    Examples:
+        >>> from pydantic import ValidationError
+        >>> try:
+        ...     Document.model_validate({"invalid": "data"})
+        ... except ValidationError as e:
+        ...     message, details = format_pydantic_errors(e)
+        ...     print(message)
     """
     error_messages = []
     error_details = []

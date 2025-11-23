@@ -155,9 +155,8 @@ def validate_against_openspec(
 
     for error in validator.iter_errors(data):
         # Build field path from error path
-        field_path = " -> ".join(str(part) for part in error.path)
-        if not field_path:
-            field_path = "root"
+        path_parts = [str(part) for part in error.path]
+        field_path = " -> ".join(path_parts) if path_parts else "root"
 
         error_info = {
             "field": field_path,

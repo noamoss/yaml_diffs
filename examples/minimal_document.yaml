@@ -1,0 +1,22 @@
+# Minimal valid example document
+# Demonstrates the basic structure with all required fields
+
+document:
+  id: "law-1234"
+  title: "חוק הדוגמה לרגולציה"
+  type: "law"
+  language: "hebrew"
+  version:
+    number: "2024-01-01"
+  source:
+    url: "https://example.gov.il/law1234"
+    fetched_at: "2025-01-20T09:50:00Z"
+
+  sections:
+    - id: "sec-1"
+      marker: "1"
+      title: "הגדרות"
+      content: |
+        בחוק זה—
+        "מוסד" – גוף הפועל לפי הוראות החוק.
+      sections: []

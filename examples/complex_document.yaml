@@ -1,0 +1,143 @@
+# Complex example document with deep nesting (5+ levels)
+# Demonstrates recursive structure capabilities with various markers
+
+document:
+  id: "reg-BOI-2025-01"
+  title: "הנחיה למוסדות פיננסיים – ניהול סיכוני סייבר"
+  type: "regulation"
+  language: "hebrew"
+  version:
+    number: "2025-02-01"
+    description: "גרסה ראשונה של ההנחיה"
+  source:
+    url: "https://boi.org.il/regulation/cyber-risk-2025"
+    fetched_at: "2025-02-20T08:00:00Z"
+
+  sections:
+    # Level 1: Chapter
+    - id: "chap-1"
+      marker: "פרק א'"
+      title: "כללי"
+      content: ""
+      sections:
+        # Level 2: Section
+        - id: "sec-1-1"
+          marker: "1"
+          title: "מטרה"
+          content: |
+            מטרת הנחיה זו היא להבטיח שמוסדות פיננסיים מנהלים את סיכוני הסייבר
+            בצורה מקצועית ומקיפה.
+          sections:
+            # Level 3: Subsection
+            - id: "sec-1-1-a"
+              marker: "(א)"
+              content: |
+                הנחיה זו חלה על כל המוסדות הפיננסיים הרשומים בישראל.
+              sections:
+                # Level 4: Sub-subsection
+                - id: "sec-1-1-a-1"
+                  marker: "1"
+                  content: |
+                    המוסדות מחויבים להקים מערכת ניהול סיכונים מקיפה.
+                  sections:
+                    # Level 5: Deeply nested clause
+                    - id: "sec-1-1-a-1-i"
+                      marker: "א"
+                      content: |
+                        מערכת ניהול הסיכונים תכלול הערכה תקופתית של הסיכונים.
+                      sections:
+                        # Level 6: Even deeper nesting
+                        - id: "sec-1-1-a-1-i-alpha"
+                          marker: "(1)"
+                          content: |
+                            ההערכה תתבצע לפחות אחת לשנה.
+                          sections: []
+
+    # Level 1: Another Chapter
+    - id: "chap-2"
+      marker: "פרק ב'"
+      title: "ניהול סיכונים"
+      content: ""
+      sections:
+        # Level 2: Section
+        - id: "sec-2-1"
+          marker: "2"
+          title: "הגדרות"
+          content: ""
+          sections:
+            # Level 3: Definition subsection
+            - id: "sec-2-1-a"
+              marker: "(א)"
+              content: |
+                "אבטחת מידע" – לרבות הגנה על מערכות מידע, נתונים ומידע דיגיטלי
+                מפני גישה לא מורשית, שימוש לרעה, חשיפה, שינוי או השמדה.
+              sections:
+                # Level 4: Nested definition
+                - id: "sec-2-1-a-1"
+                  marker: "1"
+                  content: |
+                    אבטחת מידע כוללת גם הגנה פיזית על תשתיות מידע.
+                  sections: []
+
+            - id: "sec-2-1-b"
+              marker: "(ב)"
+              content: |
+                "אירוע סייבר" – כל אירוע המהווה איום על אבטחת המידע של המוסד,
+                לרבות ניסיון פריצה, התקפת תוכנה זדונית, או דליפת מידע.
+              sections:
+                # Level 4: Examples of cyber events
+                - id: "sec-2-1-b-1"
+                  marker: "1"
+                  content: |
+                    דוגמאות לאירועי סייבר כוללות התקפות DDoS, רוגלות, ופישינג.
+                  sections:
+                    # Level 5: Specific examples
+                    - id: "sec-2-1-b-1-a"
+                      marker: "א"
+                      content: |
+                        התקפות DDoS עלולות לשבש את פעילות המוסד.
+                      sections: []
+
+        # Level 2: Another section
+        - id: "sec-2-2"
+          marker: "3"
+          title: "חובות המוסד"
+          content: |
+            כל מוסד פיננסי חייב להקים מערכת ניהול סיכוני סייבר.
+          sections:
+            # Level 3: Requirements
+            - id: "sec-2-2-a"
+              marker: "(א)"
+              content: |
+                המוסד ימנה אחראי אבטחת מידע.
+              sections:
+                # Level 4: Responsibilities
+                - id: "sec-2-2-a-1"
+                  marker: "1"
+                  content: |
+                    האחראי יהיה בעל הכשרה מקצועית מתאימה.
+                  sections:
+                    # Level 5: Qualification details
+                    - id: "sec-2-2-a-1-i"
+                      marker: "א"
+                      content: |
+                        הכשרה מקצועית כוללת תעודה מוכרת באבטחת מידע.
+                      sections: []
+
+            - id: "sec-2-2-b"
+              marker: "(ב)"
+              content: |
+                המוסד יקים ועדת סייבר.
+              sections: []
+
+    # Level 1: Chapter without marker (demonstrates optional marker)
+    - id: "chap-3"
+      title: "פיקוח ואכיפה"
+      content: ""
+      sections:
+        # Level 2: Section without title (demonstrates optional title)
+        - id: "sec-3-1"
+          marker: "4"
+          content: |
+            בנק ישראל יבצע פיקוח על יישום הנחיה זו.
+          sections: []

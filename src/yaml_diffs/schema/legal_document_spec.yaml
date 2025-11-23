@@ -109,6 +109,30 @@ properties:
           $ref: "#/$defs/Section"
         minItems: 0
 
+      authors:
+        type: array
+        description: "Optional list of authors, entities, or organizations"
+        items:
+          type: string
+        examples:
+          - ["הכנסת", "משרד המשפטים"]
+
+      published_date:
+        type: string
+        description: "Optional publication date in ISO 8601 format"
+        format: date-time
+        examples:
+          - "1992-03-17"
+          - "1992-03-17T00:00:00Z"
+
+      updated_date:
+        type: string
+        description: "Optional last update date in ISO 8601 format"
+        format: date-time
+        examples:
+          - "2024-01-15"
+          - "2024-01-15T10:30:00Z"
+
     additionalProperties: false
 
 $defs:

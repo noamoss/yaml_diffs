@@ -43,9 +43,6 @@ dev = [
     "build>=1.0.0",
 ]
 
-[project.scripts]
-yaml-diffs = "yaml_diffs.cli.main:main"
-
 [tool.setuptools]
 package-dir = {"" = "src"}
 

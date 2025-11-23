@@ -22,6 +22,12 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 - **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), and REST API (`/api/v1/*`)
 - **Schema Validation**: Dual validation via OpenSpec (contract) and Pydantic (runtime)
 
+## CI/CD Status
+
+[![Tests](https://github.com/noamoss/yaml_diffs/actions/workflows/test.yml/badge.svg)](https://github.com/noamoss/yaml_diffs/actions/workflows/test.yml)
+[![Lint](https://github.com/noamoss/yaml_diffs/actions/workflows/lint.yml/badge.svg)](https://github.com/noamoss/yaml_diffs/actions/workflows/lint.yml)
+[![Build](https://github.com/noamoss/yaml_diffs/actions/workflows/build.yml/badge.svg)](https://github.com/noamoss/yaml_diffs/actions/workflows/build.yml)
+
 ## Installation
 
 ### Prerequisites
@@ -171,4 +177,3 @@ MIT License
 ## Project Status
 
 This project is in active development. See [GitHub Issues](https://github.com/noamoss/yaml_diffs/issues) for current tasks and progress.
-

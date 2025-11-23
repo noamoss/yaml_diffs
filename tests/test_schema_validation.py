@@ -1,7 +1,9 @@
 """Tests for OpenSpec schema validation."""
 
 import json
+from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 import yaml
@@ -10,12 +12,49 @@ from yaml_diffs.schema import get_schema_version, load_schema
 
 # Try to import jsonschema, skip tests if not available
 try:
+    from jsonschema import FormatChecker
     from jsonschema.validators import Draft202012Validator
 
     JSONSCHEMA_AVAILABLE = True
 except ImportError:
     JSONSCHEMA_AVAILABLE = False
     pytestmark = pytest.mark.skip("jsonschema library not available")
+
+
+def validate_uri(instance: str) -> bool:
+    """Validate URI format."""
+    try:
+        result = urlparse(instance)
+        # Basic URI validation: must have scheme and netloc for absolute URIs
+        return bool(result.scheme and result.netloc)
+    except Exception:
+        return False
+
+
+def validate_date_time(instance: str) -> bool:
+    """Validate ISO 8601 date-time format."""
+    # Try common ISO 8601 formats
+    formats = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+        "%Y-%m-%dT%H:%M:%S.%f%z",
+    ]
+    for fmt in formats:
+        try:
+            datetime.strptime(instance, fmt)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+# Create format checker with custom validators
+_format_checker = FormatChecker()
+_format_checker.checks("uri")(validate_uri)
+_format_checker.checks("date-time")(validate_date_time)
 
 
 # Test fixtures
@@ -27,8 +66,8 @@ def schema():
 
 @pytest.fixture
 def validator(schema):
-    """Create a JSON Schema validator."""
-    return Draft202012Validator(schema)
+    """Create a JSON Schema validator with format checking enabled."""
+    return Draft202012Validator(schema, format_checker=_format_checker)
 
 
 @pytest.fixture
@@ -430,9 +469,14 @@ def test_schema_validates_url_format(validator):
         }
     }
     errors = list(validator.iter_errors(invalid_doc))
-    # Note: format validation might not be strict, but we check if errors exist
-    # The validator may or may not catch format errors depending on configuration
-    assert isinstance(errors, list)
+    # With FormatChecker enabled, format validation should catch invalid URIs
+    assert len(errors) > 0, "Format validation should reject invalid URI"
+    error_messages = [e.message for e in errors]
+    # Check that we get a format validation error
+    assert any(
+        "uri" in msg.lower() or "format" in msg.lower() or "not-a-valid-url" in msg
+        for msg in error_messages
+    ), f"Expected URI format error, got: {error_messages}"
 
 
 def test_schema_validates_timestamp_format(validator):
@@ -452,8 +496,14 @@ def test_schema_validates_timestamp_format(validator):
         }
     }
     errors = list(validator.iter_errors(invalid_doc))
-    # Note: format validation might not be strict, but we check if errors exist
-    assert isinstance(errors, list)
+    # With FormatChecker enabled, format validation should catch invalid date-time
+    assert len(errors) > 0, "Format validation should reject invalid date-time"
+    error_messages = [e.message for e in errors]
+    # Check that we get a format validation error
+    assert any(
+        "date-time" in msg.lower() or "format" in msg.lower() or "invalid-date" in msg
+        for msg in error_messages
+    ), f"Expected date-time format error, got: {error_messages}"
 
 
 def test_content_defaults_to_empty_string(validator):

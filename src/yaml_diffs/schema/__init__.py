@@ -1,5 +1,6 @@
 """OpenSpec schema definitions for legal documents."""
 
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ def _get_schema_path() -> Path:
     return Path(__file__).parent / "legal_document_spec.yaml"
 
 
+@lru_cache(maxsize=1)
 def load_schema() -> dict[str, Any]:
     """Load and return the OpenSpec schema definition.
 

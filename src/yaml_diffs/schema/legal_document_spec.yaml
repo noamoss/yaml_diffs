@@ -124,6 +124,9 @@ $defs:
       id:
         type: string
         description: "Stable section identifier (required for diffing)"
+        # Pattern supports alphanumeric characters, hyphens, and underscores.
+        # This allows for UUIDs (e.g., "550e8400-e29b-41d4-a716-446655440000")
+        # as well as custom identifiers (e.g., "sec-1", "sec-1-a").
         pattern: "^[a-zA-Z0-9_-]+$"
         minLength: 1
         examples:

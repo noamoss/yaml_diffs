@@ -100,6 +100,12 @@ yaml-diffs/
 │   └── test_api_server.py
 ├── examples/                    # Example YAML documents
 ├── docs/                         # Documentation
+├── .github/                      # GitHub configuration
+│   └── workflows/                # GitHub Actions workflows
+│       ├── test.yml              # Test workflow
+│       ├── lint.yml              # Linting workflow
+│       ├── build.yml             # Build workflow
+│       └── deploy.yml            # Deployment workflow (optional)
 ├── pyproject.toml               # Project configuration
 └── README.md                    # Human-facing documentation
 ```
@@ -133,6 +139,29 @@ ruff check src/ tests/
 # Format code
 ruff format src/ tests/
 ```
+
+### CI/CD Workflows
+
+**GitHub Actions automatically runs these checks on every push and pull request:**
+
+- **Test Workflow** (`.github/workflows/test.yml`): Runs tests on Python 3.9, 3.10, 3.11, 3.12
+- **Lint Workflow** (`.github/workflows/lint.yml`): Runs ruff linting, formatting checks, and mypy type checking
+- **Build Workflow** (`.github/workflows/build.yml`): Builds package and tests installation (runs on push to main)
+- **Deploy Workflow** (`.github/workflows/deploy.yml`): Optional automated deployment to Railway
+
+**Testing workflows locally (optional):**
+```bash
+# Install act (GitHub Actions local runner)
+# macOS: brew install act
+# Then test a workflow:
+act -j test        # Test the test workflow
+act -j lint        # Test the lint workflow
+```
+
+**Important for AI Agents:**
+- All PRs must pass CI checks before merging
+- Run `pytest`, `ruff check`, and `mypy` locally before pushing
+- CI runs on multiple Python versions - ensure compatibility
 
 ### Build Commands
 
@@ -231,6 +260,7 @@ uvicorn src.yaml_diffs.api_server.main:app --host 0.0.0.0 --port ${PORT:-8000}
 - **Fixtures**: Use pytest fixtures for test data and setup
 - **Mocking**: Mock external dependencies (file I/O, network calls)
 - **Hebrew Content**: Include tests with actual Hebrew text
+- **CI Validation**: All tests must pass in CI before PR can be merged
 
 ### Running Tests
 
@@ -266,6 +296,7 @@ pytest -m "not slow"
 - **Environment Variables**: Use environment variables for configuration
 - **`.env.example`**: Provide example file without actual secrets
 - **Railway Secrets**: Use Railway's environment variable management
+- **GitHub Secrets**: Store sensitive values (e.g., `RAILWAY_TOKEN`) in GitHub repository secrets for CI/CD workflows
 
 ### API Security
 
@@ -287,6 +318,8 @@ pytest -m "not slow"
 - **`pyproject.toml`**: Project metadata, dependencies, build config
 - **`railway.json`**: Railway deployment configuration
 - **`.env.example`**: Example environment variables
+- **`.github/workflows/`**: GitHub Actions workflow definitions
+- **`.github/dependabot.yml`**: Dependabot configuration for dependency updates
 
 ### Railway Deployment
 
@@ -325,17 +358,20 @@ pytest -m "not slow"
 1. Create feature branch from `main`
 2. Write tests first (TDD approach)
 3. Implement feature following code style
-4. Ensure all tests pass
+4. Ensure all tests pass locally (`pytest`, `ruff check`, `mypy`)
 5. Update documentation if needed
 6. Create pull request
+7. **CI will automatically validate**: Tests, linting, type checking must pass before merge
 
 ### Fixing a Bug
 
 1. Reproduce the bug with a test case
 2. Fix the bug
 3. Ensure test passes
-4. Run full test suite
-5. Update documentation if behavior changed
+4. Run full test suite locally
+5. Verify linting and type checking pass
+6. Update documentation if behavior changed
+7. **CI will validate**: All checks must pass before PR can be merged
 
 ### Working with Hebrew Content
 
@@ -359,8 +395,10 @@ pytest -m "not slow"
 - **Pydantic**: Python data validation library
 - **FastAPI**: Modern Python web framework
 - **Railway**: Deployment platform
+- **GitHub Actions**: CI/CD workflow automation
 - **Project Issues**: See GitHub issues for task tracking
 - **Project Board**: https://github.com/users/noamoss/projects/4
+- **CI/CD Documentation**: See `docs/ci_cd.md` for workflow details
 
 ## Notes for AI Agents
 
@@ -372,4 +410,6 @@ pytest -m "not slow"
 - **Follow dependencies** - check task dependencies before starting work
 - **Update tests** when modifying functionality
 - **Check existing issues** before creating new ones
+- **CI/CD Validation**: Always run `pytest`, `ruff check`, and `mypy` locally before pushing - CI will fail if these don't pass
+- **Python Version Compatibility**: Ensure code works on Python 3.9, 3.10, 3.11, 3.12 (CI tests all versions)
 

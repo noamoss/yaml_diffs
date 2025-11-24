@@ -53,9 +53,9 @@ if TYPE_CHECKING:
 def load_and_validate(file_path: str | Path | TextIO) -> Document:
     """Load and validate a document in one call.
 
-    This is a convenience function that combines `load_document()` and
-    `validate_document()`. It loads a YAML file and validates it against
-    both the OpenSpec schema and Pydantic models.
+    This is a convenience function that is equivalent to `validate_document()`.
+    It loads a YAML file and validates it against both the OpenSpec schema
+    and Pydantic models.
 
     Args:
         file_path: Path to YAML file (str or Path) or file-like object (TextIO).
@@ -72,7 +72,7 @@ def load_and_validate(file_path: str | Path | TextIO) -> Document:
     Examples:
         >>> doc = load_and_validate("examples/minimal_document.yaml")
         >>> assert isinstance(doc, Document)
-        >>> assert doc.id == "law-1234"
+        >>> assert doc.id == "test-123"
 
         >>> with open("document.yaml") as f:
         ...     doc = load_and_validate(f)

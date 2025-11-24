@@ -10,6 +10,12 @@ from yaml_diffs.exceptions import (
     YAMLLoadError,
     format_pydantic_errors,
 )
+from yaml_diffs.formatters import (
+    JsonFormatter,
+    TextFormatter,
+    YamlFormatter,
+    format_diff,
+)
 from yaml_diffs.loader import load_document, load_yaml, load_yaml_file
 from yaml_diffs.validator import (
     validate_against_openspec,
@@ -40,4 +46,9 @@ __all__ = [
     "ChangeType",
     "DiffResult",
     "DocumentDiff",
+    # Formatters
+    "JsonFormatter",
+    "TextFormatter",
+    "YamlFormatter",
+    "format_diff",
 ]

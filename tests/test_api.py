@@ -301,10 +301,20 @@ class TestDiffFiles:
         diff = diff_files(old_file, new_file)
         assert isinstance(diff, DocumentDiff)
 
-    def test_diff_files_raises_yaml_load_error(self, document_v1_file: Path):
-        """Test diff_files raises YAMLLoadError for missing file."""
+    def test_diff_files_raises_yaml_load_error_second_file(self, document_v1_file: Path):
+        """Test diff_files raises YAMLLoadError when second file is missing."""
         with pytest.raises(YAMLLoadError):
             diff_files(document_v1_file, "nonexistent.yaml")
+
+    def test_diff_files_raises_yaml_load_error_first_file(self, document_v2_file: Path):
+        """Test diff_files raises YAMLLoadError when first file is missing."""
+        with pytest.raises(YAMLLoadError):
+            diff_files("nonexistent.yaml", document_v2_file)
+
+    def test_diff_files_raises_yaml_load_error_both_files(self):
+        """Test diff_files raises YAMLLoadError when both files are missing."""
+        with pytest.raises(YAMLLoadError):
+            diff_files("nonexistent1.yaml", "nonexistent2.yaml")
 
 
 class TestDiffAndFormat:
@@ -330,12 +340,25 @@ class TestDiffAndFormat:
         assert "changes:" in result or "added_count:" in result
 
     def test_diff_and_format_with_filters(self, document_v1_file: Path, document_v2_file: Path):
-        """Test diff_and_format with change type filters."""
+        """Test diff_and_format with change type filters (using list)."""
         result = diff_and_format(
             document_v1_file,
             document_v2_file,
             output_format="json",
             filter_change_types=[ChangeType.CONTENT_CHANGED],
+        )
+        assert isinstance(result, str)
+
+    def test_diff_and_format_with_filters_tuple(
+        self, document_v1_file: Path, document_v2_file: Path
+    ):
+        """Test diff_and_format with change type filters (using tuple)."""
+        # Verify that filter_change_types accepts tuple as well as list
+        result = diff_and_format(
+            document_v1_file,
+            document_v2_file,
+            output_format="json",
+            filter_change_types=(ChangeType.CONTENT_CHANGED, ChangeType.SECTION_ADDED),
         )
         assert isinstance(result, str)
 
@@ -469,3 +492,19 @@ class TestAPIEdgeCases:
         assert len(doc.sections) == 1
         assert len(doc.sections[0].sections) == 1
         assert len(doc.sections[0].sections[0].sections) == 1
+
+    def test_api_with_empty_file(self, tmp_path: Path):
+        """Test API with empty file (should raise validation error)."""
+        empty_file = tmp_path / "empty.yaml"
+        empty_file.write_text("", encoding="utf-8")
+        # Empty file should raise YAMLLoadError or PydanticValidationError
+        with pytest.raises((YAMLLoadError, PydanticValidationError)):
+            load_document(empty_file)
+
+    def test_api_with_whitespace_only_file(self, tmp_path: Path):
+        """Test API with file containing only whitespace (should raise validation error)."""
+        whitespace_file = tmp_path / "whitespace.yaml"
+        whitespace_file.write_text("   \n\t  \n  ", encoding="utf-8")
+        # Whitespace-only file should raise YAMLLoadError or PydanticValidationError
+        with pytest.raises((YAMLLoadError, PydanticValidationError)):
+            load_document(whitespace_file)

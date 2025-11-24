@@ -132,7 +132,8 @@ def diff_and_format(
         old_file: Path to old document version (str or Path) or file-like object (TextIO).
         new_file: Path to new document version (str or Path) or file-like object (TextIO).
         output_format: Output format ("json", "text", or "yaml", default: "json").
-        filter_change_types: Optional list of change types to include in output.
+        filter_change_types: Optional sequence of change types to include in output.
+            Accepts both `list` and `tuple` (any `Sequence[ChangeType]`).
         filter_section_path: Optional marker path to filter by (exact match).
         **kwargs: Additional formatter-specific options (e.g., `indent` for JSON formatter).
 

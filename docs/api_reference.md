@@ -106,7 +106,7 @@ Format a DocumentDiff using the specified formatter.
 **Parameters:**
 - `diff` (DocumentDiff): DocumentDiff to format
 - `output_format` (str): Output format ("json", "text", or "yaml", default: "json")
-- `filter_change_types` (Optional[Sequence[ChangeType]]): Optional list of change types to include
+- `filter_change_types` (Optional[Sequence[ChangeType]]): Optional sequence of change types to include (accepts both `list` and `tuple`)
 - `filter_section_path` (Optional[str]): Optional marker path to filter by (exact match)
 - `**kwargs`: Additional formatter-specific options (e.g., `indent` for JSON formatter)
 
@@ -192,7 +192,7 @@ Load, diff, and format two documents in one call. This combines `diff_files()` a
 - `old_file` (str | Path | TextIO): Path to old document version or file-like object
 - `new_file` (str | Path | TextIO): Path to new document version or file-like object
 - `output_format` (str): Output format ("json", "text", or "yaml", default: "json")
-- `filter_change_types` (Optional[Sequence[ChangeType]]): Optional list of change types to include
+- `filter_change_types` (Optional[Sequence[ChangeType]]): Optional sequence of change types to include (accepts both `list` and `tuple`)
 - `filter_section_path` (Optional[str]): Optional marker path to filter by (exact match)
 - `**kwargs`: Additional formatter-specific options
 

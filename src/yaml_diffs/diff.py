@@ -147,9 +147,10 @@ def _find_moved_sections(
 ) -> list[tuple[MarkerMapKey, MarkerMapKey]]:
     """Find sections that moved (same marker, different path).
 
-    Matches sections by marker only (ignoring path) to detect movements.
-    Uses one-to-one matching to avoid cartesian product issues when multiple
-    sections share the same marker.
+    Matches sections by marker with content similarity check (≥0.95 threshold)
+    to detect movements. Filters out empty content sections (parent sections)
+    to avoid false positives. Uses one-to-one matching to avoid cartesian product
+    issues when multiple sections share the same marker.
 
     Args:
         unmatched_old: Dictionary of unmatched sections from old document
@@ -175,7 +176,7 @@ def _find_moved_sections(
             marker_to_new_keys[marker] = deque()
         marker_to_new_keys[marker].append(new_key)
 
-    # Find matches by marker (one-to-one matching)
+    # Find matches by marker with content similarity check (one-to-one matching)
     # BUG FIX: Use popleft() to ensure one-to-one matching and prevent cartesian product
     # when multiple old sections share the same marker with multiple new sections.
     # Without this fix, if 2 old sections with marker "1" match 2 new sections with
@@ -183,24 +184,50 @@ def _find_moved_sections(
     # Using deque.popleft() is O(1) instead of list.pop(0) which is O(n).
     for old_key in list(unmatched_old.keys()):
         old_marker = old_key[0]
+        old_section, _, _ = unmatched_old[old_key]
+
+        # Skip empty content sections (parent sections) to avoid false positives
+        if not old_section.content:
+            continue
+
         if old_marker in marker_to_new_keys and marker_to_new_keys[old_marker]:
-            # Found a match by marker (different path = moved)
-            # Take the first available new_key with this marker (one-to-one)
-            # Using popleft() removes it from the deque, preventing duplicate matches
-            new_key = marker_to_new_keys[old_marker].popleft()
-            matches.append((old_key, new_key))
+            # Check each potential match for content similarity
+            # Iterate through available new_keys with this marker
+            matched = False
+            for new_key in list(marker_to_new_keys[old_marker]):
+                new_section, _, _ = unmatched_new[new_key]
 
-            # Remove from unmatched_new to avoid duplicate matches
-            if new_key in unmatched_new:
-                del unmatched_new[new_key]
+                # Skip empty content sections
+                if not new_section.content:
+                    continue
 
-            # Remove from unmatched_old
-            if old_key in unmatched_old:
-                del unmatched_old[old_key]
+                # Check content similarity (≥0.95 threshold)
+                similarity = _calculate_content_similarity(old_section.content, new_section.content)
+                if similarity >= 0.95:
+                    # Found a match - remove from deque and add to matches
+                    marker_to_new_keys[old_marker].remove(new_key)
+                    matches.append((old_key, new_key))
+                    matched = True
 
-            # Clean up empty lists
-            if not marker_to_new_keys[old_marker]:
-                del marker_to_new_keys[old_marker]
+                    # Remove from unmatched_new to avoid duplicate matches
+                    if new_key in unmatched_new:
+                        del unmatched_new[new_key]
+
+                    # Remove from unmatched_old
+                    if old_key in unmatched_old:
+                        del unmatched_old[old_key]
+
+                    # Clean up empty deques
+                    if not marker_to_new_keys[old_marker]:
+                        del marker_to_new_keys[old_marker]
+
+                    # One-to-one matching: break after first match
+                    break
+
+            # Clean up empty deques if no match was found
+            if not matched and old_marker in marker_to_new_keys:
+                if not marker_to_new_keys[old_marker]:
+                    del marker_to_new_keys[old_marker]
 
     return matches
 
@@ -267,7 +294,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
             changes.append(
                 DiffResult(
                     section_id=old_section.id,
-                    change_type=ChangeType.RENAMED,
+                    change_type=ChangeType.TITLE_CHANGED,
                     marker=old_section.marker,
                     old_marker_path=old_marker_path,
                     new_marker_path=new_marker_path,
@@ -305,11 +332,11 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         content_changed = old_section.content != new_section.content
         title_changed = old_section.title != new_section.title
 
-        # Add MOVED change
+        # Add SECTION_MOVED change
         changes.append(
             DiffResult(
                 section_id=old_section.id,
-                change_type=ChangeType.MOVED,
+                change_type=ChangeType.SECTION_MOVED,
                 marker=old_section.marker,
                 old_marker_path=old_marker_path,
                 new_marker_path=new_marker_path,
@@ -318,15 +345,15 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
             )
         )
 
-        # BUG FIX: Check for title change (rename) when content is unchanged.
-        # Moved sections with title changes should record both MOVED and RENAMED
-        # to be consistent with non-moved sections. This ensures title change
-        # information is not lost when a section moves.
-        if title_changed and not content_changed:
+        # BUG FIX: Check for title change. Moved sections with title changes should
+        # record both MOVED and TITLE_CHANGED to be consistent with non-moved sections.
+        # This ensures title change information is not lost when a section moves.
+        # Both TITLE_CHANGED and CONTENT_CHANGED can be recorded when both change.
+        if title_changed:
             changes.append(
                 DiffResult(
                     section_id=old_section.id,
-                    change_type=ChangeType.RENAMED,
+                    change_type=ChangeType.TITLE_CHANGED,
                     marker=old_section.marker,
                     old_marker_path=old_marker_path,
                     new_marker_path=new_marker_path,
@@ -357,12 +384,12 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
             )
 
     # Remaining unmatched sections
-    # Old only -> DELETED
+    # Old only -> SECTION_REMOVED
     for _old_key, (old_section, old_marker_path, old_id_path) in unmatched_old.items():
         changes.append(
             DiffResult(
                 section_id=old_section.id,
-                change_type=ChangeType.DELETED,
+                change_type=ChangeType.SECTION_REMOVED,
                 marker=old_section.marker,
                 old_marker_path=old_marker_path,
                 old_id_path=old_id_path,
@@ -371,12 +398,12 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
             )
         )
 
-    # New only -> ADDED
+    # New only -> SECTION_ADDED
     for _new_key, (new_section, new_marker_path, new_id_path) in unmatched_new.items():
         changes.append(
             DiffResult(
                 section_id=new_section.id,
-                change_type=ChangeType.ADDED,
+                change_type=ChangeType.SECTION_ADDED,
                 marker=new_section.marker,
                 new_marker_path=new_marker_path,
                 new_id_path=new_id_path,
@@ -386,12 +413,14 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         )
 
     # Calculate counts
-    added_count = sum(1 for c in changes if c.change_type == ChangeType.ADDED)
-    deleted_count = sum(1 for c in changes if c.change_type == ChangeType.DELETED)
+    added_count = sum(1 for c in changes if c.change_type == ChangeType.SECTION_ADDED)
+    deleted_count = sum(1 for c in changes if c.change_type == ChangeType.SECTION_REMOVED)
     modified_count = sum(
-        1 for c in changes if c.change_type in (ChangeType.CONTENT_CHANGED, ChangeType.RENAMED)
+        1
+        for c in changes
+        if c.change_type in (ChangeType.CONTENT_CHANGED, ChangeType.TITLE_CHANGED)
     )
-    moved_count = sum(1 for c in changes if c.change_type == ChangeType.MOVED)
+    moved_count = sum(1 for c in changes if c.change_type == ChangeType.SECTION_MOVED)
 
     return DocumentDiff(
         changes=changes,

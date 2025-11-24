@@ -57,7 +57,7 @@ class TestDiffAddedSection:
         diff = diff_documents(old_doc, new_doc)
 
         assert diff.added_count == 1
-        added_changes = [c for c in diff.changes if c.change_type == ChangeType.ADDED]
+        added_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_ADDED]
         assert len(added_changes) == 1
         assert added_changes[0].marker == "2"
         assert added_changes[0].new_content == "Section 2"
@@ -102,7 +102,7 @@ class TestDiffAddedSection:
         diff = diff_documents(old_doc, new_doc)
 
         assert diff.added_count == 1
-        added_changes = [c for c in diff.changes if c.change_type == ChangeType.ADDED]
+        added_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_ADDED]
         assert len(added_changes) == 1
         assert added_changes[0].marker == "ב"
 
@@ -139,7 +139,7 @@ class TestDiffDeletedSection:
         diff = diff_documents(old_doc, new_doc)
 
         assert diff.deleted_count == 1
-        deleted_changes = [c for c in diff.changes if c.change_type == ChangeType.DELETED]
+        deleted_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_REMOVED]
         assert len(deleted_changes) == 1
         assert deleted_changes[0].marker == "2"
         assert deleted_changes[0].old_content == "Section 2"
@@ -221,7 +221,7 @@ class TestDiffMovement:
         diff = diff_documents(old_doc, new_doc)
 
         assert diff.moved_count == 1
-        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.MOVED]
+        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_MOVED]
         assert len(moved_changes) == 1
         assert moved_changes[0].marker == "1"
         assert moved_changes[0].old_marker_path == ("פרק א'", "1")
@@ -244,7 +244,8 @@ class TestDiffMovement:
                         Section(
                             id="sec-1",
                             marker="1",
-                            content="Original content text here",
+                            # Use identical content to guarantee similarity = 1.0 ≥ 0.95
+                            content="This is the original content text here for testing purposes and validation",
                             title="Original Title",
                         ),
                     ],
@@ -267,9 +268,11 @@ class TestDiffMovement:
                         Section(
                             id="sec-1",
                             marker="1",
-                            content="Original content text here modified",
+                            # Identical content (similarity = 1.0 ≥ 0.95) but different path = MOVED
+                            # No content change, so only MOVED should be recorded
+                            content="This is the original content text here for testing purposes and validation",
                             title="Original Title",  # Same title
-                        ),  # Moved + content changed (>80% similarity)
+                        ),  # Moved (same content, different path)
                     ],
                 ),
             ],
@@ -277,14 +280,14 @@ class TestDiffMovement:
 
         diff = diff_documents(old_doc, new_doc)
 
-        # Should have both MOVED and CONTENT_CHANGED
-        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.MOVED]
+        # Content is identical, so only MOVED should be recorded (no CONTENT_CHANGED)
+        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_MOVED]
         content_changes = [c for c in diff.changes if c.change_type == ChangeType.CONTENT_CHANGED]
 
-        assert len(moved_changes) == 1
-        assert len(content_changes) == 1
+        assert len(moved_changes) == 1, "Should be detected as MOVED (same content, different path)"
+        assert len(content_changes) == 0, "Content is identical, so no CONTENT_CHANGED"
         assert diff.moved_count == 1
-        assert diff.modified_count == 1
+        assert diff.modified_count == 0
 
 
 class TestDiffRenamed:
@@ -327,7 +330,7 @@ class TestDiffRenamed:
         diff = diff_documents(old_doc, new_doc)
 
         assert diff.modified_count == 1
-        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.RENAMED]
+        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.TITLE_CHANGED]
         assert len(renamed_changes) == 1
         assert renamed_changes[0].old_title == "Old Title"
         assert renamed_changes[0].new_title == "New Title"
@@ -368,9 +371,9 @@ class TestDiffRenamed:
 
         diff = diff_documents(old_doc, new_doc)
 
-        # Should have both CONTENT_CHANGED and RENAMED
+        # Should have both CONTENT_CHANGED and TITLE_CHANGED
         content_changes = [c for c in diff.changes if c.change_type == ChangeType.CONTENT_CHANGED]
-        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.RENAMED]
+        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.TITLE_CHANGED]
 
         assert len(content_changes) == 1, "Should have 1 CONTENT_CHANGED entry"
         assert len(renamed_changes) == 1, "Should have 1 RENAMED entry"
@@ -722,7 +725,7 @@ class TestDiffBugFixes:
         diff = diff_documents(old_doc, new_doc)
 
         # Should have exactly 2 MOVED entries (one-to-one matching)
-        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.MOVED]
+        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_MOVED]
         assert len(moved_changes) == 2
         assert diff.moved_count == 2
 
@@ -780,9 +783,9 @@ class TestDiffBugFixes:
 
         diff = diff_documents(old_doc, new_doc)
 
-        # Should have both MOVED and RENAMED
-        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.MOVED]
-        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.RENAMED]
+        # Should have both MOVED and TITLE_CHANGED
+        moved_changes = [c for c in diff.changes if c.change_type == ChangeType.SECTION_MOVED]
+        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.TITLE_CHANGED]
 
         assert len(moved_changes) == 1
         assert len(renamed_changes) == 1
@@ -813,9 +816,9 @@ class TestDiffIntegration:
 
         # Check for expected change types
         change_types = {c.change_type for c in diff.changes}
-        assert ChangeType.ADDED in change_types
+        assert ChangeType.SECTION_ADDED in change_types
         assert ChangeType.CONTENT_CHANGED in change_types
-        assert ChangeType.RENAMED in change_types
+        assert ChangeType.TITLE_CHANGED in change_types
 
     def test_diff_format_matches_expected(self, minimal_document: Document):
         """Test verify diff output format matches expected structure."""

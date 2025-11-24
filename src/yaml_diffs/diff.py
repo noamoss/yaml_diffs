@@ -244,7 +244,8 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         old_section, old_marker_path, old_id_path = old_map[key]
         new_section, new_marker_path, new_id_path = new_map[key]
 
-        # Check for changes (using elif for mutually exclusive conditions)
+        # Check for changes (using independent if statements to allow both
+        # CONTENT_CHANGED and RENAMED to be recorded when both change)
         content_changed = old_section.content != new_section.content
         title_changed = old_section.title != new_section.title
 
@@ -262,8 +263,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
                     new_content=new_section.content,
                 )
             )
-        elif title_changed:
-            # Only mark as renamed if content is the same
+        if title_changed:
             changes.append(
                 DiffResult(
                     section_id=old_section.id,
@@ -277,7 +277,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
                     new_title=new_section.title,
                 )
             )
-        else:
+        if not content_changed and not title_changed:
             changes.append(
                 DiffResult(
                     section_id=old_section.id,

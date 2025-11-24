@@ -332,6 +332,58 @@ class TestDiffRenamed:
         assert renamed_changes[0].old_title == "Old Title"
         assert renamed_changes[0].new_title == "New Title"
 
+    def test_diff_exact_match_with_both_content_and_title_change(self, minimal_document: Document):
+        """Test that exact match with both content and title changes records both CONTENT_CHANGED and RENAMED."""
+        old_doc = Document(
+            id=minimal_document.id,
+            title=minimal_document.title,
+            type=minimal_document.type,
+            version=minimal_document.version,
+            source=minimal_document.source,
+            sections=[
+                Section(
+                    id="sec-1",
+                    marker="1",
+                    content="Original content",
+                    title="Old Title",
+                ),
+            ],
+        )
+
+        new_doc = Document(
+            id=old_doc.id,
+            title=old_doc.title,
+            type=old_doc.type,
+            version=old_doc.version,
+            source=old_doc.source,
+            sections=[
+                Section(
+                    id="sec-1",
+                    marker="1",
+                    content="Updated content",
+                    title="New Title",
+                ),
+            ],
+        )
+
+        diff = diff_documents(old_doc, new_doc)
+
+        # Should have both CONTENT_CHANGED and RENAMED
+        content_changes = [c for c in diff.changes if c.change_type == ChangeType.CONTENT_CHANGED]
+        renamed_changes = [c for c in diff.changes if c.change_type == ChangeType.RENAMED]
+
+        assert len(content_changes) == 1, "Should have 1 CONTENT_CHANGED entry"
+        assert len(renamed_changes) == 1, "Should have 1 RENAMED entry"
+        assert diff.modified_count == 2, "modified_count should be 2 (both changes)"
+
+        # Verify CONTENT_CHANGED has correct content
+        assert content_changes[0].old_content == "Original content"
+        assert content_changes[0].new_content == "Updated content"
+
+        # Verify RENAMED has correct title
+        assert renamed_changes[0].old_title == "Old Title"
+        assert renamed_changes[0].new_title == "New Title"
+
 
 class TestDiffEdgeCases:
     """Test edge cases and boundary conditions."""

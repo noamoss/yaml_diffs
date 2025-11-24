@@ -13,20 +13,22 @@ class Section(BaseModel):
     """Represents a section in a legal document.
 
     Sections can be nested recursively to unlimited depth. Each section
-    must have a stable identifier for reliable diffing across versions.
+    must have a stable identifier and a marker for reliable diffing across
+    versions. Markers are the primary identifiers used for matching sections.
 
     Attributes:
         id: Unique identifier (string). Auto-generated UUID if not provided.
             Must match pattern: alphanumeric characters, hyphens, underscores.
+        marker: Required structural marker (e.g., "א", "1", "a"). Used as
+            primary identifier for diffing. Must be unique within same nesting level.
         content: Text content for this section level only (not children).
             Defaults to empty string. Supports Hebrew text (UTF-8).
-        marker: Optional structural marker (e.g., "א", "1", "a").
         title: Optional section title. Supports Hebrew text (UTF-8).
         sections: Required list of nested child sections (can be empty).
 
     Examples:
-        >>> section = Section(id="sec-1", content="Hello")
-        >>> nested = Section(id="sec-1-a", content="World", sections=[section])
+        >>> section = Section(id="sec-1", marker="1", content="Hello")
+        >>> nested = Section(id="sec-1-a", marker="א", content="World", sections=[section])
     """
 
     id: str = Field(
@@ -34,13 +36,13 @@ class Section(BaseModel):
         description="Unique identifier (string). Auto-generated UUID if not provided.",
         min_length=1,
     )
+    marker: str = Field(
+        description="Required structural marker (e.g., 'א', '1', 'a'). Used for diffing.",
+        min_length=1,
+    )
     content: str = Field(
         default="",
         description="Text content for this section level only (not children).",
-    )
-    marker: Optional[str] = Field(
-        default=None,
-        description="Optional structural marker (e.g., 'א', '1', 'a').",
     )
     title: Optional[str] = Field(
         default=None,

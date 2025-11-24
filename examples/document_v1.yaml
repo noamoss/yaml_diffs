@@ -1,0 +1,86 @@
+# Example document version 1
+# Base document with various sections and nesting levels
+# All sections have markers (required)
+
+document:
+  id: "law-example-2024"
+  title: "חוק דוגמה לבדיקת השוואות"
+  type: "law"
+  language: "hebrew"
+  version:
+    number: "2024-01-01"
+    description: "גרסה ראשונית"
+  source:
+    url: "https://example.gov.il/law-example"
+    fetched_at: "2024-01-01T10:00:00Z"
+  authors:
+    - "הכנסת"
+  published_date: "2024-01-01"
+  updated_date: "2024-01-01"
+
+  sections:
+    # Root level section
+    - id: "chap-1"
+      marker: "פרק א'"
+      title: "הגדרות"
+      content: |
+        בפרק זה מוגדרים המונחים הבסיסיים.
+      sections:
+        # Level 2
+        - id: "sec-1-1"
+          marker: "1"
+          title: "הגדרת מוסד"
+          content: |
+            "מוסד" – כל גוף הפועל לפי הוראות החוק.
+          sections:
+            # Level 3
+            - id: "sec-1-1-a"
+              marker: "(א)"
+              content: |
+                מוסד כולל גם חברות ממשלתיות.
+              sections: []
+
+        - id: "sec-1-2"
+          marker: "2"
+          title: "הגדרת פעילות"
+          content: |
+            "פעילות" – כל פעולה המבוצעת על ידי המוסד.
+          sections: []
+
+    # Another root level section
+    - id: "chap-2"
+      marker: "פרק ב'"
+      title: "חובות המוסד"
+      content: |
+        בפרק זה מפורטות החובות המוטלות על המוסד.
+      sections:
+        - id: "sec-2-1"
+          marker: "1"
+          title: "חובת דיווח"
+          content: |
+            המוסד חייב לדווח על פעילותו אחת לשנה.
+          sections:
+            - id: "sec-2-1-a"
+              marker: "(א)"
+              content: |
+                הדיווח יכלול פירוט מלא של הפעילות.
+              sections:
+                # Level 4 - deep nesting
+                - id: "sec-2-1-a-1"
+                  marker: "1"
+                  content: |
+                    הפירוט יכלול נתונים כמותיים ואיכותיים.
+                  sections:
+                    # Level 5 - very deep nesting
+                    - id: "sec-2-1-a-1-i"
+                      marker: "א"
+                      content: |
+                        נתונים כמותיים כוללים מספרים וסטטיסטיקות.
+                      sections: []
+
+        - id: "sec-2-2"
+          marker: "2"
+          title: "חובת שקיפות"
+          content: |
+            המוסד חייב לפרסם מידע על פעילותו לציבור.
+          sections: []

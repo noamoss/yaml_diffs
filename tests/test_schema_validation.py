@@ -251,8 +251,8 @@ def test_reject_missing_section_id(validator):
 
 
 # Unit tests: Optional fields
-def test_accept_document_without_marker_fields(validator):
-    """Test that document without marker fields passes validation."""
+def test_require_marker_fields(validator):
+    """Test that document without marker fields fails validation (marker is required)."""
     doc_without_markers = {
         "document": {
             "id": "test-1",
@@ -271,7 +271,11 @@ def test_accept_document_without_marker_fields(validator):
         }
     }
     errors = list(validator.iter_errors(doc_without_markers))
-    assert len(errors) == 0, f"Validation errors: {[e.message for e in errors]}"
+    assert len(errors) > 0, "Should have validation errors for missing marker"
+    error_messages = [e.message for e in errors]
+    assert any("marker" in msg.lower() for msg in error_messages), (
+        f"Should have marker-related error: {error_messages}"
+    )
 
 
 def test_accept_document_without_title_fields(validator):
@@ -298,8 +302,8 @@ def test_accept_document_without_title_fields(validator):
     assert len(errors) == 0, f"Validation errors: {[e.message for e in errors]}"
 
 
-def test_accept_section_without_marker_or_title(validator):
-    """Test that section without marker or title passes validation."""
+def test_accept_section_without_title_but_with_marker(validator):
+    """Test that section without title but with marker passes validation (marker is required, title is optional)."""
     doc_with_minimal_section = {
         "document": {
             "id": "test-1",
@@ -311,6 +315,7 @@ def test_accept_section_without_marker_or_title(validator):
             "sections": [
                 {
                     "id": "sec-1",
+                    "marker": "1",
                     "content": "Test content",
                     "sections": [],
                 }
@@ -521,6 +526,7 @@ def test_content_defaults_to_empty_string(validator):
             "sections": [
                 {
                     "id": "sec-1",
+                    "marker": "1",
                     "content": "",  # Empty string is valid
                     "sections": [],
                 }
@@ -545,6 +551,7 @@ def test_accept_section_without_content_field(validator):
             "sections": [
                 {
                     "id": "sec-1",
+                    "marker": "1",
                     # content field omitted - should be valid since it's optional
                     "sections": [],
                 }

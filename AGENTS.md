@@ -336,17 +336,22 @@ pytest -m "not slow"
 
 ### Document Schema
 
-- **Stable IDs**: All sections must have stable UUIDs (auto-generated if not provided)
+- **Stable IDs**: All sections must have stable UUIDs (auto-generated if not provided). IDs are used for tracking but not for matching.
+- **Markers Required**: All sections must have a marker (required field). Markers are the primary identifiers for diffing.
 - **Recursive Structure**: Sections can contain nested sections to unlimited depth
-- **Optional Fields**: `marker` and `title` are optional; `id` and `content` are required
+- **Optional Fields**: `title` is optional; `id`, `marker`, and `content` are required
 - **Content Field**: Contains only text for this section level (not children)
 
 ### Diffing Logic
 
-- **ID-Based**: Diffing is based on stable section IDs
-- **Change Types**: Addition, deletion, content change, marker change, movement
-- **Path Tracking**: Track parent paths to detect section movements
-- **Nested Handling**: Handle deeply nested structures correctly
+- **Marker-Based**: Diffing is based on section markers (not IDs). Markers are the primary identifiers used for matching sections across document versions.
+- **Marker Requirement**: All sections must have a marker (required field). Markers must be unique within the same nesting level.
+- **Change Types**: Addition, deletion, content change, movement, renaming (title change)
+- **Path Tracking**: Hybrid approach - uses marker paths for matching, ID paths for tracking
+- **Movement Detection**: Sections with same marker but different parent path are detected as moved
+- **Content Similarity**: Uses content similarity scoring (80% threshold) to detect moved sections with content changes
+- **Multiple Changes**: A single section can have multiple change types (e.g., MOVED + CONTENT_CHANGED as separate entries)
+- **Nested Handling**: Handle deeply nested structures correctly (5+ levels)
 
 ### API Design
 

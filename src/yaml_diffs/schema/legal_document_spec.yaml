@@ -140,14 +140,17 @@ $defs:
     type: object
     description: |
       Recursive section definition. Sections can contain nested sections
-      to unlimited depth. Each section must have a stable ID for diffing.
+      to unlimited depth. Each section must have a stable ID and a marker
+      for diffing. Markers are the primary identifiers used for matching
+      sections across document versions.
     required:
       - id
+      - marker
       - sections
     properties:
       id:
         type: string
-        description: "Stable section identifier (required for diffing)"
+        description: "Stable section identifier (required for tracking)"
         # Pattern supports alphanumeric characters, hyphens, and underscores.
         # This allows for UUIDs (e.g., "550e8400-e29b-41d4-a716-446655440000")
         # as well as custom identifiers (e.g., "sec-1", "sec-1-a").
@@ -161,8 +164,11 @@ $defs:
       marker:
         type: string
         description: |
-          Optional structural marker (e.g., "1", "1.א", "(b)", "II", "א'")
-          Preserved verbatim for citation purposes.
+          Required structural marker (e.g., "1", "1.א", "(b)", "II", "א'").
+          Markers are the primary identifiers used for diffing sections across
+          document versions. Preserved verbatim for citation purposes.
+          Must be unique within the same nesting level.
+        minLength: 1
         examples:
           - "1"
           - "1.א"

@@ -130,8 +130,9 @@ document:
                 המוסד יקים ועדת סייבר.
               sections: []
 
-    # Level 1: Chapter without marker (demonstrates optional marker)
+    # Level 1: Chapter
     - id: "chap-3"
+      marker: "פרק ג'"
       title: "פיקוח ואכיפה"
       content: ""
       sections:

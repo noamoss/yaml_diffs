@@ -30,8 +30,8 @@ def hebrew_text() -> str:
 
 @pytest.fixture
 def minimal_section(sample_id: str) -> Section:
-    """Create a minimal section with only id."""
-    return Section(id=sample_id)
+    """Create a minimal section with id and marker."""
+    return Section(id=sample_id, marker="1")
 
 
 @pytest.fixture
@@ -80,23 +80,23 @@ class TestSectionCreation:
         assert isinstance(section.sections, list)
 
     def test_create_section_with_minimal_fields(self, sample_id: str):
-        """Test creating Section with only id provided."""
-        section = Section(id=sample_id)
+        """Test creating Section with id and marker (required fields)."""
+        section = Section(id=sample_id, marker="1")
 
         assert section.id == sample_id
         assert isinstance(section.id, str)
+        assert section.marker == "1"
         assert section.content == ""  # Should default to empty string
-        assert section.marker is None
         assert section.title is None
         assert section.sections == []
 
     def test_nested_sections_deep_nesting(self, sample_id: str):
         """Test nested sections (3+ levels deep)."""
         # Create 4 levels deep
-        level4 = Section(id=str(uuid.uuid4()), content="Level 4")
-        level3 = Section(id=str(uuid.uuid4()), content="Level 3", sections=[level4])
-        level2 = Section(id=str(uuid.uuid4()), content="Level 2", sections=[level3])
-        level1 = Section(id=sample_id, content="Level 1", sections=[level2])
+        level4 = Section(id=str(uuid.uuid4()), marker="4", content="Level 4")
+        level3 = Section(id=str(uuid.uuid4()), marker="3", content="Level 3", sections=[level4])
+        level2 = Section(id=str(uuid.uuid4()), marker="2", content="Level 2", sections=[level3])
+        level1 = Section(id=sample_id, marker="1", content="Level 1", sections=[level2])
 
         # Verify all levels are accessible
         assert level1.content == "Level 1"
@@ -110,8 +110,8 @@ class TestSectionCreation:
 
     def test_auto_generate_id_when_id_not_provided(self):
         """Test auto-generate ID (UUID string) when id not provided."""
-        section1 = Section()
-        section2 = Section()
+        section1 = Section(marker="1")
+        section2 = Section(marker="2")
 
         # Verify IDs are generated as strings
         assert isinstance(section1.id, str)
@@ -131,29 +131,37 @@ class TestSectionCreation:
         """Test reject invalid data types."""
         # Test invalid id type
         with pytest.raises(ValidationError) as exc_info:
-            Section(id=123)  # Should be string
+            Section(id=123, marker="1")  # Should be string
         assert "id" in str(exc_info.value).lower()
 
         # Test invalid content type
         with pytest.raises(ValidationError) as exc_info:
-            Section(id="sec-1", content=123)  # Should be string
+            Section(id="sec-1", marker="1", content=123)  # Should be string
         assert "content" in str(exc_info.value).lower()
 
         # Test invalid marker type
         with pytest.raises(ValidationError) as exc_info:
-            Section(id="sec-1", marker=123)  # Should be string or None
+            Section(id="sec-1", marker=123)  # Should be string
         assert "marker" in str(exc_info.value).lower()
 
         # Test invalid sections type
         with pytest.raises(ValidationError) as exc_info:
-            Section(id="sec-1", sections="not a list")  # Should be list
+            Section(id="sec-1", marker="1", sections="not a list")  # Should be list
         assert "sections" in str(exc_info.value).lower()
+
+    def test_marker_is_required(self):
+        """Test that marker is required (cannot be omitted)."""
+        with pytest.raises(ValidationError) as exc_info:
+            Section(id="sec-1")  # Missing required marker
+        errors = exc_info.value.errors()
+        error_fields = [error["loc"][-1] for error in errors]
+        assert "marker" in error_fields
 
     def test_reject_invalid_id_pattern(self):
         """Test reject invalid ID patterns."""
         # Test invalid ID pattern (contains invalid characters)
         with pytest.raises(ValidationError) as exc_info:
-            Section(id="sec 1")  # Space is not allowed
+            Section(id="sec 1", marker="1")  # Space is not allowed
         errors = exc_info.value.errors()
         assert len(errors) > 0
         error_msg = str(exc_info.value).lower()
@@ -161,7 +169,13 @@ class TestSectionCreation:
 
         # Test empty ID
         with pytest.raises(ValidationError) as exc_info:
-            Section(id="")  # Empty string not allowed
+            Section(id="", marker="1")  # Empty string not allowed
+        errors = exc_info.value.errors()
+        assert len(errors) > 0
+
+        # Test empty marker
+        with pytest.raises(ValidationError) as exc_info:
+            Section(id="sec-1", marker="")  # Empty marker not allowed
         errors = exc_info.value.errors()
         assert len(errors) > 0
 
@@ -185,7 +199,7 @@ class TestSectionCreation:
 
         # Test with mixed Hebrew and English
         mixed_content = f"{hebrew_text} - Basic Law"
-        section_mixed = Section(id="sec-2", content=mixed_content)
+        section_mixed = Section(id="sec-2", marker="2", content=mixed_content)
         assert section_mixed.content == mixed_content
 
 
@@ -194,7 +208,7 @@ class TestDocumentCreation:
 
     def test_create_document_with_all_fields(self, sample_id: str, hebrew_text: str):
         """Test creating Document with all fields including new metadata."""
-        section = Section(id=sample_id, content=hebrew_text)
+        section = Section(id=sample_id, marker="1", content=hebrew_text)
         doc = Document(
             id="law-1234",
             title="חוק יסוד: כבוד האדם וחירותו",
@@ -550,6 +564,7 @@ document:
       title: "סעיף ראשון"
       sections:
         - id: "sec-1-1"
+          marker: "1"
           content: "תוכן משני"
 """
 
@@ -605,6 +620,7 @@ document:
                     sections=[
                         Section(
                             id="sec-1-1",
+                            marker="1",
                             content="תוכן משני",
                         ),
                     ],
@@ -658,7 +674,11 @@ document:
             version=Version(number="1.0"),
             source=Source(url="https://example.com/law", fetched_at="2025-01-20T09:50:00Z"),
             sections=[
-                Section(content="Section 1", sections=[Section(content="Section 1.1")]),
+                Section(
+                    marker="1",
+                    content="Section 1",
+                    sections=[Section(marker="1", content="Section 1.1")],
+                ),
             ],
         )
 
@@ -682,13 +702,13 @@ class TestEdgeCases:
 
     def test_empty_content_string(self, sample_id: str):
         """Test section with empty content string."""
-        section = Section(id=sample_id, content="")
+        section = Section(id=sample_id, marker="1", content="")
         assert section.content == ""
 
     def test_very_long_hebrew_text(self, sample_id: str):
         """Test section with very long Hebrew text."""
         long_text = "חוק יסוד: כבוד האדם וחירותו " * 100
-        section = Section(id=sample_id, content=long_text)
+        section = Section(id=sample_id, marker="1", content=long_text)
         assert len(section.content) > 1000
         assert section.content.startswith("חוק יסוד")
 
@@ -696,11 +716,12 @@ class TestEdgeCases:
         """Test section with multiple nested sections."""
         section = Section(
             id=sample_id,
+            marker="1",
             content="Parent",
             sections=[
-                Section(id="sec-1", content="Child 1"),
-                Section(id="sec-2", content="Child 2"),
-                Section(id="sec-3", content="Child 3"),
+                Section(id="sec-1", marker="א", content="Child 1"),
+                Section(id="sec-2", marker="ב", content="Child 2"),
+                Section(id="sec-3", marker="ג", content="Child 3"),
             ],
         )
         assert len(section.sections) == 3
@@ -710,11 +731,11 @@ class TestEdgeCases:
 
     def test_id_as_string(self, sample_id: str):
         """Test that ID can be provided as string."""
-        section = Section(id=sample_id)
+        section = Section(id=sample_id, marker="1")
         assert isinstance(section.id, str)
         assert section.id == sample_id
 
         # Test with custom string ID (not UUID)
-        section2 = Section(id="sec-1")
+        section2 = Section(id="sec-1", marker="1")
         assert section2.id == "sec-1"
         assert isinstance(section2.id, str)

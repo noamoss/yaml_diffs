@@ -1,6 +1,8 @@
 """yaml-diffs: Python service for Hebrew legal documents in YAML format."""
 
 from yaml_diffs.__version__ import __version__
+from yaml_diffs.diff import diff_documents
+from yaml_diffs.diff_types import ChangeType, DiffResult, DocumentDiff
 from yaml_diffs.exceptions import (
     OpenSpecValidationError,
     PydanticValidationError,
@@ -32,4 +34,10 @@ __all__ = [
     "validate_against_openspec",
     "validate_against_pydantic",
     "validate_document",
+    # Diff functions
+    "diff_documents",
+    # Diff types
+    "ChangeType",
+    "DiffResult",
+    "DocumentDiff",
 ]

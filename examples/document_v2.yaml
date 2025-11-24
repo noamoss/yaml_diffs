@@ -1,0 +1,124 @@
+# Example document version 2
+# Modified version demonstrating various change types:
+# - Added section (new marker)
+# - Deleted section (marker removed)
+# - Content changed (same marker+path)
+# - Section moved (same marker, different parent)
+# - Section renamed (title changed, same marker+path+content)
+# - Section moved + content changed (same marker, different path, content changed)
+
+document:
+  id: "law-example-2024"
+  title: "חוק דוגמה לבדיקת השוואות"
+  type: "law"
+  language: "hebrew"
+  version:
+    number: "2024-02-01"
+    description: "גרסה מעודכנת"
+  source:
+    url: "https://example.gov.il/law-example"
+    fetched_at: "2024-02-01T10:00:00Z"
+  authors:
+    - "הכנסת"
+  published_date: "2024-01-01"
+  updated_date: "2024-02-01"
+
+  sections:
+    # Root level section
+    - id: "chap-1"
+      marker: "פרק א'"
+      title: "הגדרות"
+      content: |
+        בפרק זה מוגדרים המונחים הבסיסיים.
+      sections:
+        # Level 2
+        - id: "sec-1-1"
+          marker: "1"
+          title: "הגדרת מוסד"
+          content: |
+            "מוסד" – כל גוף הפועל לפי הוראות החוק המעודכנות.
+            # CONTENT CHANGED: Added "המעודכנות"
+          sections:
+            # Level 3
+            - id: "sec-1-1-a"
+              marker: "(א)"
+              content: |
+                מוסד כולל גם חברות ממשלתיות.
+              sections: []
+
+        - id: "sec-1-2"
+          marker: "2"
+          title: "הגדרת פעילות מעודכנת"
+          # RENAMED: Title changed from "הגדרת פעילות" to "הגדרת פעילות מעודכנת"
+          content: |
+            "פעילות" – כל פעולה המבוצעת על ידי המוסד.
+          sections: []
+
+        # ADDED: New section
+        - id: "sec-1-3"
+          marker: "3"
+          title: "הגדרת רגולציה"
+          content: |
+            "רגולציה" – כל תקנה או הוראה המחייבת את המוסד.
+          sections: []
+
+    # Another root level section
+    - id: "chap-2"
+      marker: "פרק ב'"
+      title: "חובות המוסד"
+      content: |
+        בפרק זה מפורטות החובות המוטלות על המוסד.
+      sections:
+        - id: "sec-2-1"
+          marker: "1"
+          title: "חובת דיווח"
+          content: |
+            המוסד חייב לדווח על פעילותו אחת לשנה.
+          sections:
+            - id: "sec-2-1-a"
+              marker: "(א)"
+              content: |
+                הדיווח יכלול פירוט מלא של הפעילות.
+              sections:
+                # Level 4 - deep nesting
+                - id: "sec-2-1-a-1"
+                  marker: "1"
+                  content: |
+                    הפירוט יכלול נתונים כמותיים ואיכותיים.
+                  sections:
+                    # Level 5 - very deep nesting
+                    - id: "sec-2-1-a-1-i"
+                      marker: "א"
+                      content: |
+                        נתונים כמותיים כוללים מספרים וסטטיסטיקות.
+                      sections: []
+
+        # MOVED: Section moved from chap-2 to chap-3
+        # (same marker "2", different parent)
+        # This section will be moved to a new chapter
+
+    # NEW CHAPTER: Created to demonstrate movement
+    - id: "chap-3"
+      marker: "פרק ג'"
+      title: "שקיפות ופיקוח"
+      content: |
+        בפרק זה מפורטות הוראות השקיפות והפיקוח.
+      sections:
+        # MOVED: This section was moved from "פרק ב'" to "פרק ג'"
+        # Same marker "2", different parent path
+        - id: "sec-2-2"
+          marker: "2"
+          title: "חובת שקיפות"
+          content: |
+            המוסד חייב לפרסם מידע על פעילותו לציבור.
+          sections: []
+
+        # MOVED + CONTENT CHANGED: Section moved and content changed
+        # (high similarity >80%, same title)
+        - id: "sec-moved-changed"
+          marker: "3"
+          title: "חובת פיקוח"
+          content: |
+            המוסד חייב לאפשר פיקוח על פעילותו על ידי הרשויות.
+            # This was moved from elsewhere and content was modified
+          sections: []

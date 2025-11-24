@@ -17,7 +17,7 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 ## Key Features
 
 - **Recursive Structure**: Documents use recursive sections with unlimited nesting depth
-- **Stable IDs**: All sections must have stable UUIDs for reliable diffing across versions
+- **Marker-Based Diffing**: Sections are matched by markers (not IDs) for reliable diffing across versions. All sections must have unique markers at each nesting level.
 - **Hebrew Support**: Full UTF-8 support for Hebrew legal text throughout
 - **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), and REST API (`/api/v1/*`)
 - **Schema Validation**: Dual validation via OpenSpec (contract) and Pydantic (runtime)

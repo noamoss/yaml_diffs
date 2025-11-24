@@ -252,7 +252,7 @@ The API server can be configured using environment variables:
 | `PORT` | `8000` | Port to bind the server to (Railway sets this automatically) |
 | `HOST` | `0.0.0.0` | Host to bind the server to |
 | `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
-| `CORS_ORIGINS` | `*` | Comma-separated list of allowed CORS origins |
+| `CORS_ORIGINS` | `""` (empty) | Comma-separated list of allowed CORS origins. Defaults to empty list (no CORS) for security. Set to `*` to allow all origins (insecure for production). |
 | `CORS_ALLOW_CREDENTIALS` | `true` | Allow credentials in CORS requests |
 | `CORS_ALLOW_METHODS` | `*` | Comma-separated list of allowed HTTP methods |
 | `CORS_ALLOW_HEADERS` | `*` | Comma-separated list of allowed headers |
@@ -265,7 +265,10 @@ The API server can be configured using environment variables:
 PORT=8000
 HOST=0.0.0.0
 LOG_LEVEL=INFO
-CORS_ORIGINS=http://localhost:3000,https://example.com
+# For local development with frontend (explicitly set - defaults to empty for security)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+# For production (specific domains only)
+# CORS_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
 CORS_ALLOW_CREDENTIALS=true
 ```
 

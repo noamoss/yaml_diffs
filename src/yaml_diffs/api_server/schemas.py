@@ -5,6 +5,7 @@ Defines Pydantic models for API request/response validation and serialization.
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any, Optional
 
@@ -20,8 +21,6 @@ def _get_max_yaml_size() -> int:
     Returns:
         Maximum YAML size in bytes, defaulting to 10MB if not set or invalid.
     """
-    import logging
-
     value = os.getenv("MAX_YAML_SIZE", "10_000_000")
     try:
         return int(value)

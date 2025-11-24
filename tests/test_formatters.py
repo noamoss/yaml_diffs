@@ -570,6 +570,79 @@ class TestFormatDiffConvenience:
         with pytest.raises(ValueError, match="Unknown format"):
             format_diff(diff, output_format="invalid")
 
+    def test_format_diff_filters_invalid_kwargs(self):
+        """Test that format_diff silently ignores invalid kwargs for each formatter."""
+        change = DiffResult(
+            section_id="test-1",
+            change_type=ChangeType.CONTENT_CHANGED,
+            marker="1",
+            old_marker_path=("1",),
+            new_marker_path=("1",),
+            old_content="old",
+            new_content="new",
+            old_title=None,
+            new_title=None,
+        )
+        diff = DocumentDiff(
+            changes=[change], added_count=0, deleted_count=0, modified_count=1, moved_count=0
+        )
+
+        # JSON formatter should ignore text-specific kwargs
+        output = format_diff(diff, output_format="json", show_context=True)
+        assert "old" in output  # Should work without error
+
+        # Text formatter should accept text-specific kwargs
+        output = format_diff(diff, output_format="text", show_context=True)
+        assert "old" in output  # Should work
+
+        # YAML formatter should ignore text-specific kwargs
+        output = format_diff(diff, output_format="yaml", show_context=True)
+        assert "old" in output  # Should work without error
+
+    def test_text_formatter_displays_empty_string_titles(self):
+        """Test that text formatter displays title changes involving empty strings."""
+        # Test: title changes from empty string to None
+        change1 = DiffResult(
+            section_id="test-1",
+            change_type=ChangeType.TITLE_CHANGED,
+            marker="1",
+            old_marker_path=("1",),
+            new_marker_path=("1",),
+            old_title="",  # Empty string
+            new_title=None,  # None
+            old_content=None,
+            new_content=None,
+        )
+
+        # Test: title changes from None to empty string
+        change2 = DiffResult(
+            section_id="test-2",
+            change_type=ChangeType.TITLE_CHANGED,
+            marker="2",
+            old_marker_path=("2",),
+            new_marker_path=("2",),
+            old_title=None,  # None
+            new_title="",  # Empty string
+            old_content=None,
+            new_content=None,
+        )
+
+        diff = DocumentDiff(
+            changes=[change1, change2],
+            added_count=0,
+            deleted_count=0,
+            modified_count=2,
+            moved_count=0,
+        )
+
+        formatter = TextFormatter()
+        output = formatter.format(diff)
+
+        # Should display old title for change1 (empty string)
+        assert "Old title:" in output
+        # Should display new title for change2 (empty string)
+        assert "New title:" in output
+
 
 class TestFormatterIntegration:
     """Integration tests with example documents."""

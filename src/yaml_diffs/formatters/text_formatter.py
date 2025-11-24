@@ -105,11 +105,11 @@ def _format_change(change: DiffResult, show_context: bool) -> list[str]:
 
     # Title changes
     if change.old_title != change.new_title:
-        if change.old_title:
+        if change.old_title is not None:
             lines.append(f"Old title: {change.old_title}")
-        if change.new_title:
+        if change.new_title is not None:
             lines.append(f"New title: {change.new_title}")
-        if change.old_title or change.new_title:
+        if change.old_title is not None or change.new_title is not None:
             lines.append("")
 
     # Content changes

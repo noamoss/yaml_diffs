@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Optional
 
 from yaml_diffs.diff_types import ChangeType, DocumentDiff
@@ -49,29 +50,39 @@ def format_diff(
         >>> text_output = format_diff(diff, output_format="text")
         >>> yaml_output = format_diff(diff, output_format="yaml")
     """
+    # Filter kwargs to only include parameters accepted by the selected formatter
     if output_format == "json":
         formatter = JsonFormatter()
+        # Get valid parameters for JsonFormatter.format()
+        sig = inspect.signature(formatter.format)
+        valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
         return formatter.format(
             diff,
             filter_change_types=filter_change_types,
             filter_section_path=filter_section_path,
-            **kwargs,
+            **valid_kwargs,
         )
     elif output_format == "text":
-        formatter = TextFormatter()  # type: ignore[assignment]
-        return formatter.format(
+        text_formatter = TextFormatter()
+        # Get valid parameters for TextFormatter.format()
+        sig = inspect.signature(text_formatter.format)
+        valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
+        return text_formatter.format(
             diff,
             filter_change_types=filter_change_types,
             filter_section_path=filter_section_path,
-            **kwargs,
+            **valid_kwargs,
         )
     elif output_format == "yaml":
-        formatter = YamlFormatter()  # type: ignore[assignment]
-        return formatter.format(
+        yaml_formatter = YamlFormatter()
+        # Get valid parameters for YamlFormatter.format()
+        sig = inspect.signature(yaml_formatter.format)
+        valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
+        return yaml_formatter.format(
             diff,
             filter_change_types=filter_change_types,
             filter_section_path=filter_section_path,
-            **kwargs,
+            **valid_kwargs,
         )
     else:
         raise ValueError(f"Unknown format: {output_format}. Must be one of: json, text, yaml")

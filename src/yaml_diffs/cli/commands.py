@@ -13,75 +13,13 @@ import click
 
 from yaml_diffs import ChangeType
 from yaml_diffs.api import diff_and_format, validate_document
+from yaml_diffs.cli.utils import handle_cli_error
 from yaml_diffs.exceptions import (
     OpenSpecValidationError,
     PydanticValidationError,
     ValidationError,
     YAMLLoadError,
 )
-
-
-def _handle_error(error: Exception, file_path: str | None = None) -> None:
-    """Handle CLI errors with user-friendly messages.
-
-    Args:
-        error: The exception that occurred.
-        file_path: Optional file path that caused the error.
-    """
-    file_info = f" ({file_path})" if file_path else ""
-
-    if isinstance(error, YAMLLoadError):
-        click.echo(f"Error: Failed to load YAML file{file_info}", err=True)
-        if error.message:
-            click.echo(f"  {error.message}", err=True)
-        if error.original_error:
-            click.echo(f"  Details: {error.original_error}", err=True)
-        sys.exit(1)
-
-    elif isinstance(error, OpenSpecValidationError):
-        click.echo(f"Error: Document validation failed{file_info}", err=True)
-        if error.message:
-            click.echo(f"  {error.message}", err=True)
-        if error.errors:
-            click.echo("  Validation errors:", err=True)
-            for err in error.errors[:5]:  # Show first 5 errors
-                click.echo(f"    - {err}", err=True)
-            if len(error.errors) > 5:
-                click.echo(f"    ... and {len(error.errors) - 5} more errors", err=True)
-        sys.exit(1)
-
-    elif isinstance(error, PydanticValidationError):
-        click.echo(f"Error: Document structure validation failed{file_info}", err=True)
-        if error.message:
-            click.echo(f"  {error.message}", err=True)
-        if error.errors:
-            click.echo("  Validation errors:", err=True)
-            for err in error.errors[:5]:  # Show first 5 errors
-                click.echo(f"    - {err}", err=True)
-            if len(error.errors) > 5:
-                click.echo(f"    ... and {len(error.errors) - 5} more errors", err=True)
-        sys.exit(1)
-
-    elif isinstance(error, ValidationError):
-        click.echo(f"Error: Validation failed{file_info}", err=True)
-        if error.message:
-            click.echo(f"  {error.message}", err=True)
-        sys.exit(1)
-
-    elif isinstance(error, FileNotFoundError):
-        click.echo(f"Error: File not found{file_info}", err=True)
-        click.echo(f"  {error}", err=True)
-        sys.exit(1)
-
-    elif isinstance(error, ValueError):
-        click.echo(f"Error: Invalid value{file_info}", err=True)
-        click.echo(f"  {error}", err=True)
-        sys.exit(1)
-
-    else:
-        click.echo(f"Error: Unexpected error occurred{file_info}", err=True)
-        click.echo(f"  {type(error).__name__}: {error}", err=True)
-        sys.exit(1)
 
 
 def _show_progress(message: str, file_path: str | Path) -> None:
@@ -91,7 +29,7 @@ def _show_progress(message: str, file_path: str | Path) -> None:
         message: Progress message to display.
         file_path: Path to the file being processed.
     """
-    if sys.stdout.isatty():
+    if sys.stderr.isatty():  # Check stderr since we write to stderr
         file_size = os.path.getsize(file_path) if os.path.exists(file_path) else 0
         size_mb = file_size / (1024 * 1024)
         if size_mb > 1.0:
@@ -119,7 +57,6 @@ def validate_command(file: Path) -> None:
     try:
         _show_progress("Loading", file)
         doc = validate_document(file)
-        _show_progress("Validating", file)
 
         # If we get here, validation succeeded
         click.echo(f"✓ Document '{file}' is valid")
@@ -130,9 +67,9 @@ def validate_command(file: Path) -> None:
         click.echo(f"  Sections: {len(doc.sections)}")
 
     except (YAMLLoadError, ValidationError, OpenSpecValidationError, PydanticValidationError) as e:
-        _handle_error(e, file_path=str(file))
+        handle_cli_error(e, file_path=str(file))
     except Exception as e:
-        _handle_error(e, file_path=str(file))
+        handle_cli_error(e, file_path=str(file))
 
 
 @click.command(name="diff")
@@ -236,8 +173,17 @@ def diff_command(
 
         # Write output
         if output_file:
-            output_file.write_text(formatted_output, encoding="utf-8")
-            click.echo(f"✓ Diff saved to '{output_file}'")
+            try:
+                # Ensure parent directory exists
+                output_file.parent.mkdir(parents=True, exist_ok=True)
+                output_file.write_text(formatted_output, encoding="utf-8")
+                click.echo(f"✓ Diff saved to '{output_file}'")
+            except PermissionError:
+                handle_cli_error(
+                    PermissionError(f"Cannot write to '{output_file}': permission denied")
+                )
+            except OSError as e:
+                handle_cli_error(OSError(f"Cannot write to '{output_file}': {e}"))
         else:
             click.echo(formatted_output)
 
@@ -246,9 +192,11 @@ def diff_command(
         file_path = None
         if isinstance(e, YAMLLoadError) and e.file_path:
             file_path = e.file_path
-        _handle_error(e, file_path=file_path)
+        elif hasattr(e, "file_path"):  # Check if other exceptions have file_path
+            file_path = e.file_path
+        handle_cli_error(e, file_path=file_path)
     except ValueError as e:
         # Handle format errors, etc.
-        _handle_error(e)
+        handle_cli_error(e)
     except Exception as e:
-        _handle_error(e)
+        handle_cli_error(e)

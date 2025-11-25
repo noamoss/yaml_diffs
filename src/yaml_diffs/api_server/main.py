@@ -19,6 +19,7 @@ from yaml_diffs.api_server.config import configure_logging, settings
 from yaml_diffs.api_server.routers import diff, health, validate
 from yaml_diffs.exceptions import (
     OpenSpecValidationError,
+    PathValidationError,
     PydanticValidationError,
     ValidationError,
     YAMLLoadError,
@@ -83,6 +84,33 @@ async def yaml_load_error_handler(request: Request, exc: YAMLLoadError) -> JSONR
             "error": "YAMLLoadError",
             "message": str(exc),
             "details": [{"file_path": exc.file_path}] if exc.file_path else None,
+        },
+    )
+
+
+@app.exception_handler(PathValidationError)
+async def path_validation_error_handler(request: Request, exc: PathValidationError) -> JSONResponse:
+    """Handle PathValidationError exceptions.
+
+    This handler is for security violations related to path validation.
+    It returns a generic error message to avoid exposing internal file system
+    structure while logging the actual violation for monitoring.
+
+    Args:
+        request: FastAPI request object.
+        exc: PathValidationError exception.
+
+    Returns:
+        JSONResponse with 400 Bad Request status.
+    """
+    logger.warning(f"Path validation error (security violation): {exc.reason} - {exc.file_path}")
+    # Don't expose internal paths in error message for security
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": "PathValidationError",
+            "message": "Invalid file path provided",
+            "details": None,  # Don't expose path details
         },
     )
 

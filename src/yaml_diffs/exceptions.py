@@ -41,6 +41,39 @@ class YAMLLoadError(Exception):
         self.file_path = file_path
 
 
+class PathValidationError(Exception):
+    """Exception raised when path validation fails.
+
+    This exception is raised when a file path is determined to be unsafe,
+    typically due to directory traversal attempts or paths outside an allowed
+    base directory. This is a security-focused exception for API contexts.
+
+    Attributes:
+        message: Human-readable error message.
+        file_path: The path that failed validation.
+        reason: Reason for validation failure (e.g., "directory_traversal",
+            "outside_base_dir").
+    """
+
+    def __init__(
+        self,
+        message: str,
+        file_path: str | None = None,
+        reason: str | None = None,
+    ) -> None:
+        """Initialize PathValidationError.
+
+        Args:
+            message: Human-readable error message.
+            file_path: The path that failed validation.
+            reason: Reason for validation failure.
+        """
+        super().__init__(message)
+        self.message = message
+        self.file_path = file_path
+        self.reason = reason
+
+
 class ValidationError(Exception):
     """Base exception for validation errors.
 

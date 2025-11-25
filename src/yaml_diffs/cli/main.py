@@ -31,6 +31,7 @@ def cli(ctx: click.Context) -> None:
 # Register commands
 cli.add_command(commands.validate_command)
 cli.add_command(commands.diff_command)
+cli.add_command(commands.mcp_server_command)
 
 
 def main() -> None:

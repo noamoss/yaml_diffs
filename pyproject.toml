@@ -7,7 +7,7 @@ name = "yaml-diffs"
 version = "0.1.0"
 description = "Python service for representing Hebrew legal and regulatory documents in a flexible, nested YAML format"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Noam Oss", email = "noam@thepitz.studio"}
@@ -18,16 +18,18 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup",
 ]
 
 dependencies = [
     "click>=8.0.0",
+    "httpx>=0.24.0",
     "jsonschema>=4.0.0",
+    "mcp>=1.0.0",
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
     "fastapi>=0.100.0",
@@ -37,6 +39,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "pytest-watch>=4.2.0",
     "ruff>=0.1.0",
@@ -44,7 +47,6 @@ dev = [
     "pre-commit>=3.4.0",
     "build>=1.0.0",
     "types-jsonschema>=4.0.0",
-    "httpx>=0.24.0",
 ]
 
 [tool.setuptools]
@@ -55,6 +57,7 @@ where = ["src"]
 
 [project.scripts]
 yaml-diffs = "yaml_diffs.cli.main:main"
+yaml-diffs-mcp-server = "yaml_diffs.mcp_server.server:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -70,6 +73,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
 ]
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["src/yaml_diffs"]
@@ -91,7 +95,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [
@@ -107,7 +111,6 @@ ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
-    "UP045",  # Use Optional[X] instead of X | None for Python 3.9 compatibility
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -117,7 +120,7 @@ ignore = [
 known-first-party = ["yaml_diffs"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false

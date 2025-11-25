@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -56,35 +55,35 @@ class DiffResult(BaseModel):
         description="The section marker (primary identifier)",
         min_length=1,
     )
-    old_marker_path: Optional[tuple[str, ...]] = Field(
+    old_marker_path: tuple[str, ...] | None = Field(
         default=None,
         description="Marker path in old version (markers from root)",
     )
-    new_marker_path: Optional[tuple[str, ...]] = Field(
+    new_marker_path: tuple[str, ...] | None = Field(
         default=None,
         description="Marker path in new version",
     )
-    old_id_path: Optional[list[str]] = Field(
+    old_id_path: list[str] | None = Field(
         default=None,
         description="ID path in old version (for tracking)",
     )
-    new_id_path: Optional[list[str]] = Field(
+    new_id_path: list[str] | None = Field(
         default=None,
         description="ID path in new version (for tracking)",
     )
-    old_content: Optional[str] = Field(
+    old_content: str | None = Field(
         default=None,
         description="Content in old version",
     )
-    new_content: Optional[str] = Field(
+    new_content: str | None = Field(
         default=None,
         description="Content in new version",
     )
-    old_title: Optional[str] = Field(
+    old_title: str | None = Field(
         default=None,
         description="Title in old version",
     )
-    new_title: Optional[str] = Field(
+    new_title: str | None = Field(
         default=None,
         description="Title in new version",
     )

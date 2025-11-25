@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from yaml_diffs.diff_types import ChangeType, DocumentDiff
 from yaml_diffs.formatters._filters import (
@@ -27,8 +27,8 @@ class JsonFormatter:
     @staticmethod
     def format(
         diff: DocumentDiff,
-        filter_change_types: Optional[Sequence[ChangeType]] = None,
-        filter_section_path: Optional[str] = None,
+        filter_change_types: Sequence[ChangeType] | None = None,
+        filter_section_path: str | None = None,
         indent: int = 2,
         ensure_ascii: bool = False,
     ) -> str:

@@ -1,6 +1,6 @@
 """CLI commands for yaml-diffs.
 
-This module implements the validate and diff commands.
+This module implements the validate, diff, and mcp-server commands.
 """
 
 from __future__ import annotations
@@ -209,5 +209,77 @@ def diff_command(
     except ValueError as e:
         # Handle format errors, etc.
         handle_cli_error(e)
+    except Exception as e:
+        handle_cli_error(e)
+
+
+@click.command(name="mcp-server")
+@click.option(
+    "--api-url",
+    "api_url",
+    type=str,
+    default=None,
+    help="Override API base URL (default: http://localhost:8000 or YAML_DIFFS_API_URL env var)",
+)
+@click.option(
+    "--api-key",
+    "api_key",
+    type=str,
+    default=None,
+    help="Override API key for authentication (default: YAML_DIFFS_API_KEY env var)",
+)
+@click.option(
+    "--timeout",
+    "timeout",
+    type=int,
+    default=None,
+    help="Override request timeout in seconds (default: 30 or YAML_DIFFS_API_TIMEOUT env var)",
+)
+def mcp_server_command(api_url: str | None, api_key: str | None, timeout: int | None) -> None:
+    """Run the MCP (Model Context Protocol) server for yaml-diffs API.
+
+    This command starts an MCP server that exposes the REST API endpoints
+    as MCP tools, enabling AI assistants to interact with the yaml-diffs
+    service via the MCP protocol.
+
+    The server uses stdio transport (standard MCP protocol) and provides
+    three tools:
+    - validate_document: Validate a YAML document
+    - diff_documents: Diff two YAML documents
+    - health_check: Check API health status
+
+    Configuration can be provided via command-line options or environment
+    variables:
+    - YAML_DIFFS_API_URL: API base URL (default: http://localhost:8000)
+    - YAML_DIFFS_API_KEY: Optional API key for authentication
+    - YAML_DIFFS_API_TIMEOUT: Request timeout in seconds (default: 30)
+
+    Examples:
+
+        \b
+        # Run with default settings (local API)
+        yaml-diffs mcp-server
+
+        \b
+        # Run with custom API URL
+        yaml-diffs mcp-server --api-url http://api.example.com:8000
+
+        \b
+        # Run with API key authentication
+        yaml-diffs mcp-server --api-key your-api-key-here
+    """
+    try:
+        # Create configuration from CLI arguments
+        from yaml_diffs.mcp_server.config import MCPServerConfig
+        from yaml_diffs.mcp_server.server import main
+
+        config = MCPServerConfig(
+            api_base_url=api_url,
+            api_key=api_key,
+            timeout=timeout,
+        )
+
+        # Run the server with the configuration
+        main(config)
     except Exception as e:
         handle_cli_error(e)

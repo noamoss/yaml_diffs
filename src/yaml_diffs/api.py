@@ -28,7 +28,7 @@ For more details, see the individual function docstrings or the full API documen
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import TYPE_CHECKING, TextIO
 
 # Re-export main functions from existing modules
 from yaml_diffs.diff import diff_documents
@@ -121,8 +121,8 @@ def diff_and_format(
     old_file: str | Path | TextIO,
     new_file: str | Path | TextIO,
     output_format: str = "json",
-    filter_change_types: Optional[Sequence[ChangeType]] = None,
-    filter_section_path: Optional[str] = None,
+    filter_change_types: Sequence[ChangeType] | None = None,
+    filter_section_path: str | None = None,
     **kwargs,
 ) -> str:
     """Load, diff, and format two documents in one call.

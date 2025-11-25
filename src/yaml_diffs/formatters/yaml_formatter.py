@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import yaml  # type: ignore[import-untyped]
 
@@ -28,8 +28,8 @@ class YamlFormatter:
     @staticmethod
     def format(
         diff: DocumentDiff,
-        filter_change_types: Optional[Sequence[ChangeType]] = None,
-        filter_section_path: Optional[str] = None,
+        filter_change_types: Sequence[ChangeType] | None = None,
+        filter_section_path: str | None = None,
         default_flow_style: bool = False,
         allow_unicode: bool = True,
     ) -> str:

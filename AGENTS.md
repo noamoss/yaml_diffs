@@ -426,4 +426,5 @@ pytest -m "not slow"
 - **Update tests** when modifying functionality
 - **Check existing issues** before creating new ones
 - **CI/CD Validation**: Always run `pytest`, `ruff check`, and `mypy` locally before pushing - CI will fail if these don't pass
-- **Python Version Compatibility**: Ensure code works on Python 3.9, 3.10, 3.11, 3.12 (CI tests all versions)
+- **Python Version Compatibility**: Ensure code works on Python 3.10, 3.11, 3.12 (CI tests all versions)
+- **Pre-commit Consistency**: Pre-commit hooks are configured to match CI/CD checks. Both use the same configuration from `pyproject.toml`. If pre-commit passes but CI fails, check version differences or run `uv run mypy src/` locally to match CI exactly.

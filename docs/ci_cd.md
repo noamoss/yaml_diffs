@@ -17,7 +17,7 @@ The project uses GitHub Actions to automate testing, linting, building, and depl
 - Pull requests to `main` branch
 
 **Features**:
-- Tests on Python 3.9, 3.10, 3.11, and 3.12 using matrix strategy
+- Tests on Python 3.10, 3.11, and 3.12 using matrix strategy
 - Generates coverage reports (XML and terminal output)
 - Uploads coverage to Codecov (optional, requires `CODECOV_TOKEN` secret)
 - Fails fast on first error
@@ -167,6 +167,44 @@ Status badges are displayed in the README to show the current status of each wor
 [![Tests](https://github.com/noamoss/yaml_diffs/actions/workflows/test.yml/badge.svg)](https://github.com/noamoss/yaml_diffs/actions/workflows/test.yml)
 [![Lint](https://github.com/noamoss/yaml_diffs/actions/workflows/lint.yml/badge.svg)](https://github.com/noamoss/yaml_diffs/actions/workflows/lint.yml)
 [![Build](https://github.com/noamoss/yaml_diffs/actions/workflows/build.yml/badge.svg)](https://github.com/noamoss/yaml_diffs/actions/workflows/build.yml)
+```
+
+## Pre-commit and CI/CD Consistency
+
+To ensure consistency between local pre-commit hooks and CI/CD checks:
+
+### Configuration Alignment
+
+- **mypy**: Both pre-commit and CI/CD read configuration from `pyproject.toml`
+  - Pre-commit hook explicitly uses `--config-file=pyproject.toml`
+  - CI/CD uses `uv run mypy src/` which automatically reads `pyproject.toml`
+  - Both use compatible mypy versions (pre-commit v1.8.0+, CI uses mypy>=1.5.0 from dependencies)
+
+- **ruff**: Both use the same configuration from `pyproject.toml`
+  - Pre-commit uses ruff-pre-commit v0.14.6
+  - CI/CD uses ruff from dependencies (ruff>=0.1.0)
+
+### Version Management
+
+- Pre-commit hook versions are kept compatible with CI/CD dependencies
+- When updating dependencies in `pyproject.toml`, consider updating pre-commit hook versions
+- Run `pre-commit run --all-files` locally to catch issues before pushing
+
+### Why Pre-commit Might Pass But CI Fails
+
+If pre-commit passes locally but CI fails, check:
+
+1. **Version differences**: Pre-commit hooks may use different tool versions than CI
+2. **Configuration**: Ensure both read from the same config files (`pyproject.toml`)
+3. **Scope**: Pre-commit runs on staged files, CI runs on entire codebase
+4. **Environment**: Different Python/dependency versions between local and CI
+
+To verify consistency:
+```bash
+# Run the same commands CI uses
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
+uv run mypy src/
 ```
 
 ## Troubleshooting

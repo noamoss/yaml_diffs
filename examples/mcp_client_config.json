@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "yaml-diffs": {
+      "command": "yaml-diffs-mcp-server",
+      "args": [],
+      "env": {
+        "YAML_DIFFS_API_URL": "http://localhost:8000"
+      }
+    }
+  }
+}

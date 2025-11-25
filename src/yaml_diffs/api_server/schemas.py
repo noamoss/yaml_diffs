@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -74,14 +74,14 @@ class ValidateResponse(BaseModel):
     """
 
     valid: bool = Field(description="Whether the document is valid")
-    document: Optional[Document] = Field(
+    document: Document | None = Field(
         default=None, description="Validated document object (if valid)"
     )
-    error: Optional[str] = Field(default=None, description="Error type (if invalid)")
-    message: Optional[str] = Field(
+    error: str | None = Field(default=None, description="Error type (if invalid)")
+    message: str | None = Field(
         default=None, description="Human-readable error message (if invalid)"
     )
-    details: Optional[list[dict[str, Any]]] = Field(
+    details: list[dict[str, Any]] | None = Field(
         default=None, description="Detailed error information (if invalid)"
     )
 
@@ -161,7 +161,7 @@ class ErrorResponse(BaseModel):
 
     error: str = Field(description="Error type/class name")
     message: str = Field(description="Human-readable error message")
-    details: Optional[list[dict[str, Any]]] = Field(
+    details: list[dict[str, Any]] | None = Field(
         default=None, description="Optional detailed error information"
     )
 

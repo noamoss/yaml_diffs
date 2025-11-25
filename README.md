@@ -19,7 +19,7 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 - **Recursive Structure**: Documents use recursive sections with unlimited nesting depth
 - **Marker-Based Diffing**: Sections are matched by markers (not IDs) for reliable diffing across versions. All sections must have unique markers at each nesting level.
 - **Hebrew Support**: Full UTF-8 support for Hebrew legal text throughout
-- **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), and REST API (`/api/v1/*`)
+- **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), REST API (`/api/v1/*`), and MCP Server
 - **Schema Validation**: Dual validation via OpenSpec (contract) and Pydantic (runtime)
 
 ## CI/CD Status
@@ -32,7 +32,7 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher (required for MCP server support)
 - uv (install via: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Git
 
@@ -71,7 +71,8 @@ yaml-diffs/
 │       ├── schema/          # OpenSpec schema
 │       ├── formatters/      # Diff output formatters
 │       ├── cli/             # CLI tool
-│       └── api_server/      # FastAPI REST API
+│       ├── api_server/      # FastAPI REST API
+│       └── mcp_server/      # MCP server for AI assistants
 ├── tests/                   # Test suite
 ├── examples/                # Example YAML documents
 ├── docs/                    # Documentation
@@ -153,6 +154,32 @@ uvicorn src.yaml_diffs.api_server.main:app --reload --port 8000
 # Health check
 curl http://localhost:8000/health
 ```
+
+### MCP Server
+
+The MCP (Model Context Protocol) server exposes the REST API endpoints as MCP tools, enabling AI assistants to interact with the yaml-diffs service.
+
+**Quick Start:**
+
+```bash
+# Run MCP server (connects to local API by default)
+yaml-diffs mcp-server
+
+# Or with custom configuration
+yaml-diffs mcp-server --api-url http://api.example.com:8000 --api-key your-key
+```
+
+**Available Tools:**
+- `validate_document`: Validate a YAML document
+- `diff_documents`: Compare two YAML documents
+- `health_check`: Check API health status
+
+**Configuration:**
+- `YAML_DIFFS_API_URL`: API base URL (default: `http://localhost:8000`)
+- `YAML_DIFFS_API_KEY`: Optional API key for authentication
+- `YAML_DIFFS_API_TIMEOUT`: Request timeout in seconds (default: `30`)
+
+For detailed MCP server documentation, see [docs/mcp_server.md](docs/mcp_server.md).
 
 ## Contributing
 

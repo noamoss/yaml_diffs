@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -44,7 +43,7 @@ class Section(BaseModel):
         default="",
         description="Text content for this section level only (not children).",
     )
-    title: Optional[str] = Field(
+    title: str | None = Field(
         default=None,
         description="Optional section title.",
     )

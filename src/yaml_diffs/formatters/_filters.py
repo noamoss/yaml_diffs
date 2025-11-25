@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from yaml_diffs.diff_types import ChangeType, DiffResult
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
-def format_marker_path(marker_path: Optional[tuple[str, ...]]) -> str:
+def format_marker_path(marker_path: tuple[str, ...] | None) -> str:
     """Format marker path tuple as a readable string.
 
     Args:
@@ -34,7 +34,7 @@ def format_marker_path(marker_path: Optional[tuple[str, ...]]) -> str:
 
 def filter_by_change_type(
     changes: list[DiffResult],
-    change_types: Optional[Sequence[ChangeType]],
+    change_types: Sequence[ChangeType] | None,
 ) -> list[DiffResult]:
     """Filter changes by change type.
 
@@ -62,7 +62,7 @@ def filter_by_change_type(
 
 def filter_by_section_path(
     changes: list[DiffResult],
-    section_path: Optional[str],
+    section_path: str | None,
 ) -> list[DiffResult]:
     """Filter changes by section marker path.
 

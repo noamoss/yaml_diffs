@@ -9,21 +9,39 @@ import yaml  # type: ignore[import-untyped]
 from pydantic import ValidationError as PydanticValidationErrorBase
 
 from yaml_diffs.exceptions import (
+    PathValidationError,
     PydanticValidationError,
     YAMLLoadError,
     format_pydantic_errors,
 )
 from yaml_diffs.models import Document
+from yaml_diffs.security import validate_path_safe
 
 
-def load_yaml_file(file_path: str | Path) -> dict[str, Any]:
+def load_yaml_file(
+    file_path: str | Path,
+    validate_path: bool = False,
+    base_dir: Path | None = None,
+) -> dict[str, Any]:
     """Load YAML file from file path.
 
     Opens the file with UTF-8 encoding and parses it using yaml.safe_load().
     This function handles file I/O errors and YAML parsing errors.
 
+    **Security Note**: When used in web API contexts where file paths come from
+    user input, set `validate_path=True` to prevent directory traversal attacks
+    (e.g., `../../../etc/passwd`). Optionally provide `base_dir` to restrict
+    file access to a specific directory.
+
     Args:
         file_path: Path to the YAML file (string or Path object).
+        validate_path: If True, validate the path to prevent directory traversal
+            attacks. Should be enabled when file paths come from user input in
+            API contexts. Defaults to False for backward compatibility.
+        base_dir: Optional base directory to restrict paths to when
+            `validate_path=True`. If provided, all paths must be within this
+            directory. Useful for API endpoints that should only access files
+            in a specific directory.
 
     Returns:
         Dictionary containing the parsed YAML data.
@@ -34,12 +52,31 @@ def load_yaml_file(file_path: str | Path) -> dict[str, Any]:
             - PermissionError: Insufficient permissions to read file
             - yaml.YAMLError: Invalid YAML syntax
             - UnicodeDecodeError: Encoding issues
+            - PathValidationError: If path validation fails (when
+                `validate_path=True`)
 
     Examples:
         >>> data = load_yaml_file("examples/minimal_document.yaml")
         >>> assert "document" in data
+
+        >>> # API usage with path validation
+        >>> from pathlib import Path
+        >>> base = Path("/safe/documents")
+        >>> data = load_yaml_file("user_file.yaml", validate_path=True, base_dir=base)
     """
     file_path_obj = Path(file_path) if isinstance(file_path, str) else file_path
+
+    # Validate path if requested (for API security)
+    if validate_path:
+        try:
+            file_path_obj = validate_path_safe(file_path_obj, base_dir)
+        except PathValidationError as e:
+            # Convert PathValidationError to YAMLLoadError for consistency
+            raise YAMLLoadError(
+                f"Path validation failed: {e.message}",
+                original_error=e,
+                file_path=str(e.file_path) if e.file_path else str(file_path_obj),
+            ) from e
 
     try:
         with open(file_path_obj, encoding="utf-8") as f:

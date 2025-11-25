@@ -52,7 +52,7 @@ class PathValidationError(Exception):
         message: Human-readable error message.
         file_path: The path that failed validation.
         reason: Reason for validation failure (e.g., "directory_traversal",
-            "outside_base_dir", "absolute_path").
+            "outside_base_dir").
     """
 
     def __init__(

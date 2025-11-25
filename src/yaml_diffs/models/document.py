@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator
@@ -35,7 +35,7 @@ class Version(BaseModel):
         description="Version identifier or date (e.g., '2024-11-01', 'v1.0').",
         min_length=1,
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None,
         description="Optional version description.",
     )
@@ -142,15 +142,15 @@ class Document(BaseModel):
     source: Source = Field(
         description="Document source information (object with url and fetched_at). Required.",
     )
-    authors: Optional[list[str]] = Field(
+    authors: list[str] | None = Field(
         default=None,
         description="Optional list of authors, entities, or organizations. Supports Hebrew text (UTF-8).",
     )
-    published_date: Optional[str] = Field(
+    published_date: str | None = Field(
         default=None,
         description="Optional publication date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).",
     )
-    updated_date: Optional[str] = Field(
+    updated_date: str | None = Field(
         default=None,
         description="Optional last update date in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).",
     )
@@ -161,7 +161,7 @@ class Document(BaseModel):
 
     @field_validator("published_date", "updated_date")
     @classmethod
-    def validate_date_format(cls, v: Optional[str]) -> Optional[str]:
+    def validate_date_format(cls, v: str | None) -> str | None:
         """Validate that date strings are in ISO 8601 format."""
         if v is None:
             return v

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from yaml_diffs.diff_types import ChangeType, DiffResult, DocumentDiff
 from yaml_diffs.formatters._filters import (
@@ -26,8 +26,8 @@ class TextFormatter:
     @staticmethod
     def format(
         diff: DocumentDiff,
-        filter_change_types: Optional[Sequence[ChangeType]] = None,
-        filter_section_path: Optional[str] = None,
+        filter_change_types: Sequence[ChangeType] | None = None,
+        filter_section_path: str | None = None,
         show_context: bool = True,
     ) -> str:
         """Format diff as human-readable text.

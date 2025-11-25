@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from yaml_diffs.diff_types import ChangeType, DiffResult, DocumentDiff
 from yaml_diffs.models import Document, Section
@@ -53,7 +53,7 @@ def _validate_unique_markers(
 def _build_marker_map(
     sections: list[Section],
     parent_marker_path: tuple[str, ...] = (),
-    parent_id_path: Optional[list[str]] = None,
+    parent_id_path: list[str] | None = None,
 ) -> MarkerMap:
     """Build marker+path -> section mapping.
 

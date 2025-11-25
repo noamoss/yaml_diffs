@@ -163,6 +163,7 @@ def main(config: MCPServerConfig | None = None) -> None:
         asyncio.run(run_server(config))
     except KeyboardInterrupt:
         logger.info("Server interrupted by user")
+        raise  # Re-raise to exit with code 130 (standard for SIGINT)
     except Exception as e:
         logger.error(f"Server error: {e}", exc_info=True)
         raise

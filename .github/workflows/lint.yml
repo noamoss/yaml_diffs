@@ -28,10 +28,10 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          path: ${{ runner.home }}/.cache/uv
+          key: ${{ runner.os }}-python-3.11-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
-            ${{ runner.os }}-uv-
+            ${{ runner.os }}-python-3.11-uv-
 
       - name: Install dependencies
         run: |

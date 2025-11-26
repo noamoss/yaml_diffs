@@ -56,8 +56,6 @@ pre-commit install
 
 ## Project Structure
 
-> **Note**: The structure below shows the planned/expected project layout. Some files and directories are not yet implemented and will be added in future phases.
-
 ```
 yaml-diffs/
 ├── src/
@@ -75,7 +73,16 @@ yaml-diffs/
 │       └── mcp_server/      # MCP server for AI assistants
 ├── tests/                   # Test suite
 ├── examples/                # Example YAML documents
+│   ├── minimal_document.yaml
+│   ├── complex_document.yaml
+│   ├── document_v1.yaml
+│   ├── document_v2.yaml
+│   └── template.yaml
 ├── docs/                    # Documentation
+│   ├── user/                # User-facing documentation
+│   ├── developer/           # Developer documentation
+│   ├── api/                 # API documentation
+│   └── operations/          # Operations documentation
 ├── pyproject.toml           # Project configuration
 └── README.md               # This file
 ```
@@ -121,9 +128,28 @@ python -m build
 uv pip install dist/yaml_diffs-*.whl
 ```
 
-## Usage
+## Quick Start
 
-### CLI (Coming Soon)
+### Python Library
+
+```python
+from yaml_diffs import load_document, diff_documents, format_diff
+
+# Load a document
+doc = load_document("examples/minimal_document.yaml")
+print(f"Document: {doc.title}")
+
+# Diff two documents
+old_doc = load_document("examples/document_v1.yaml")
+new_doc = load_document("examples/document_v2.yaml")
+diff = diff_documents(old_doc, new_doc)
+
+# Format the results
+json_output = format_diff(diff, output_format="json")
+print(json_output)
+```
+
+### CLI
 
 ```bash
 # Validate a document
@@ -131,29 +157,37 @@ yaml-diffs validate examples/minimal_document.yaml
 
 # Diff two documents
 yaml-diffs diff examples/document_v1.yaml examples/document_v2.yaml
+
+# Diff with text output
+yaml-diffs diff old.yaml new.yaml --format text
+
+# Save diff to file
+yaml-diffs diff old.yaml new.yaml --output diff.json
 ```
 
-### Python Library (Coming Soon)
-
-```python
-from yaml_diffs import load_document, diff_documents
-
-# Load and validate a document
-doc = load_document("document.yaml")
-
-# Diff two documents
-diff = diff_documents(old_doc, new_doc)
-```
-
-### REST API (Coming Soon)
+### REST API
 
 ```bash
 # Start API server
 uvicorn src.yaml_diffs.api_server.main:app --reload --port 8000
 
+# Validate a document
+curl -X POST http://localhost:8000/api/v1/validate \
+  -H "Content-Type: application/json" \
+  -d '{"yaml": "document:\n  id: \"test\"\n  ..."}'
+
+# Diff two documents
+curl -X POST http://localhost:8000/api/v1/diff \
+  -H "Content-Type: application/json" \
+  -d '{"old_yaml": "...", "new_yaml": "..."}'
+
 # Health check
 curl http://localhost:8000/health
 ```
+
+The API also provides interactive documentation:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
 ### MCP Server
 
@@ -179,20 +213,52 @@ yaml-diffs mcp-server --api-url http://api.example.com:8000 --api-key your-key
 - `YAML_DIFFS_API_KEY`: Optional API key for authentication
 - `YAML_DIFFS_API_TIMEOUT`: Request timeout in seconds (default: `30`)
 
-For detailed MCP server documentation, see [docs/mcp_server.md](docs/mcp_server.md).
+For detailed MCP server documentation, see [docs/api/mcp_server.md](docs/api/mcp_server.md).
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Getting Started](docs/user/getting_started.md)** - Quick start guide with installation and basic usage
+- **[Schema Reference](docs/user/schema_reference.md)** - Complete OpenSpec schema documentation
+- **[Examples Guide](docs/user/examples.md)** - How to use example documents and templates
+- **[API Reference](docs/developer/api_reference.md)** - Complete Python library API reference
+- **[Architecture](docs/developer/architecture.md)** - System architecture and design decisions
+- **[Contributing](docs/developer/contributing.md)** - How to contribute to the project
+- **[REST API](docs/api/api_server.md)** - REST API documentation
+- **[MCP Server](docs/api/mcp_server.md)** - MCP server for AI assistants
+- **[CI/CD](docs/operations/ci_cd.md)** - Continuous integration and deployment workflows
+
+See the [Documentation Index](docs/README.md) for a complete overview.
 
 ## Contributing
 
+We welcome contributions! Please see our [Contributing Guide](docs/developer/contributing.md) for details.
+
+**Quick Start:**
 1. Create a feature branch from `main`
 2. Write tests first (TDD approach)
 3. Implement feature following code style
-4. Ensure all tests pass
+4. Ensure all tests pass (`pytest`, `ruff check`, `mypy`)
 5. Update documentation if needed
 6. Create pull request
+
+For AI coding agents, see [AGENTS.md](AGENTS.md) for specific guidelines.
 
 ## License
 
 MIT License
+
+## Examples
+
+The `examples/` directory contains example documents:
+
+- **`minimal_document.yaml`** - Minimal valid document with all required fields
+- **`complex_document.yaml`** - Complex document with deep nesting (5+ levels)
+- **`document_v1.yaml`** and **`document_v2.yaml`** - Example versions for diffing
+- **`template.yaml`** - Template for creating new documents
+
+See the [Examples Guide](docs/user/examples.md) and [Examples README](examples/README.md) for details.
 
 ## References
 
@@ -200,7 +266,14 @@ MIT License
 - **Pydantic**: Python data validation library
 - **FastAPI**: Modern Python web framework
 - **Railway**: Deployment platform
+- **GitHub Actions**: CI/CD workflow automation
 
 ## Project Status
 
 This project is in active development. See [GitHub Issues](https://github.com/noamoss/yaml_diffs/issues) for current tasks and progress.
+
+## Getting Help
+
+- **Documentation**: [Documentation Index](docs/README.md)
+- **Issues**: [GitHub Issues](https://github.com/noamoss/yaml_diffs/issues)
+- **Project Board**: [GitHub Project Board](https://github.com/users/noamoss/projects/4)

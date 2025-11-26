@@ -254,5 +254,5 @@ pytest tests/test_mcp_server.py tests/test_mcp_tools.py -v
 ## Related Documentation
 
 - [REST API Documentation](api_server.md)
-- [API Reference](api_reference.md)
-- [Main README](../README.md)
+- [API Reference](../developer/api_reference.md)
+- [Main README](../../README.md)

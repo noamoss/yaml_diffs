@@ -251,8 +251,14 @@ uv run mypy src/
 
 ## Workflow Dependencies
 
-- **Test Workflow**: Requires comprehensive test suite (Task 5.1)
-- **Deploy Workflow**: Requires REST API service (Task 3.3)
+- **Test Workflow**: Requires comprehensive test suite
+- **Deploy Workflow**: Requires REST API service
+
+## Related Documentation
+
+- [REST API Documentation](../api/api_server.md) - API deployment details
+- [Contributing Guide](../developer/contributing.md) - Development workflow
+- [AGENTS.md](../../AGENTS.md) - AI agent development guide
 
 ## Additional Resources
 

@@ -22,7 +22,7 @@ from yaml_diffs.models import Document
 from yaml_diffs.schema import load_schema
 
 
-def _validate_uri(instance: str) -> bool:
+def _validate_uri(instance: str | None) -> bool:
     """Validate absolute URI format.
 
     Validates that the string is a well-formed absolute URI (must have both
@@ -34,6 +34,10 @@ def _validate_uri(instance: str) -> bool:
     Returns:
         True if valid absolute URI, False otherwise.
     """
+    # Handle None values (optional fields)
+    if instance is None:
+        return False
+
     try:
         result = urlparse(instance)
         # Basic URI validation: must have scheme and netloc for absolute URIs
@@ -43,7 +47,7 @@ def _validate_uri(instance: str) -> bool:
         return False
 
 
-def _validate_date_time(instance: str) -> bool:
+def _validate_date_time(instance: str | None) -> bool:
     """Validate ISO 8601 date-time format.
 
     Args:
@@ -52,6 +56,10 @@ def _validate_date_time(instance: str) -> bool:
     Returns:
         True if valid ISO 8601 date-time, False otherwise.
     """
+    # Handle None values (optional fields)
+    if instance is None:
+        return False
+
     # Handle timezone with colon separator (e.g., +05:30)
     # Python's strptime only supports +HHMM or -HHMM, not +HH:MM
     # Check for timezone pattern before normalizing (re.search is technically

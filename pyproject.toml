@@ -25,6 +25,12 @@ classifiers = [
     "Topic :: Text Processing :: Markup",
 ]
 
+[project.urls]
+Homepage = "https://github.com/noamoss/yaml_diffs"
+Documentation = "https://github.com/noamoss/yaml_diffs/tree/main/docs"
+Repository = "https://github.com/noamoss/yaml_diffs"
+Issues = "https://github.com/noamoss/yaml_diffs/issues"
+
 dependencies = [
     "click>=8.0.0",
     "httpx>=0.24.0",
@@ -51,9 +57,13 @@ dev = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+yaml_diffs = ["schema/*.yaml"]
 
 [project.scripts]
 yaml-diffs = "yaml_diffs.cli.main:main"

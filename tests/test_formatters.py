@@ -13,6 +13,8 @@ from yaml_diffs.formatters import (
     JsonFormatter,
     TextFormatter,
     YamlFormatter,
+    calculate_summary_counts,
+    diff_result_to_dict,
     filter_by_change_type,
     filter_by_section_path,
     format_diff,
@@ -157,6 +159,193 @@ class TestFilterBySectionPath:
         ]
         result = filter_by_section_path(changes, "פרק א' -> 1")
         assert len(result) == 1
+
+    def test_filter_by_section_path_empty_string(self):
+        """Test filtering with empty string (should return all)."""
+        changes = [
+            DiffResult(
+                section_id="1",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="1",
+                old_marker_path=("פרק א'", "1"),
+            ),
+        ]
+        result = filter_by_section_path(changes, "")
+        assert len(result) == 1
+
+    def test_filter_by_section_path_whitespace(self):
+        """Test filtering with whitespace-only string (should return all)."""
+        changes = [
+            DiffResult(
+                section_id="1",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="1",
+                old_marker_path=("פרק א'", "1"),
+            ),
+        ]
+        result = filter_by_section_path(changes, "   ")
+        assert len(result) == 1
+
+    def test_filter_by_section_path_no_match(self):
+        """Test filtering with path that doesn't match."""
+        changes = [
+            DiffResult(
+                section_id="1",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="1",
+                old_marker_path=("פרק א'", "1"),
+            ),
+        ]
+        result = filter_by_section_path(changes, "פרק ב' -> 1")
+        assert len(result) == 0
+
+
+class TestDiffResultToDict:
+    """Tests for diff_result_to_dict utility."""
+
+    def test_diff_result_to_dict_full(self):
+        """Test converting DiffResult with all fields to dict."""
+        change = DiffResult(
+            section_id="sec-1",
+            change_type=ChangeType.CONTENT_CHANGED,
+            marker="1",
+            old_marker_path=("פרק א'", "1"),
+            new_marker_path=("פרק א'", "1"),
+            old_id_path=["chap-1", "sec-1"],
+            new_id_path=["chap-1", "sec-1"],
+            old_content="Old content",
+            new_content="New content",
+            old_title="Old title",
+            new_title="New title",
+        )
+
+        result = diff_result_to_dict(change)
+
+        assert result["section_id"] == "sec-1"
+        assert result["change_type"] == "content_changed"
+        assert result["marker"] == "1"
+        assert result["old_marker_path"] == ["פרק א'", "1"]
+        assert result["new_marker_path"] == ["פרק א'", "1"]
+        assert result["old_id_path"] == ["chap-1", "sec-1"]
+        assert result["new_id_path"] == ["chap-1", "sec-1"]
+        assert result["old_content"] == "Old content"
+        assert result["new_content"] == "New content"
+        assert result["old_title"] == "Old title"
+        assert result["new_title"] == "New title"
+
+    def test_diff_result_to_dict_minimal(self):
+        """Test converting minimal DiffResult to dict."""
+        change = DiffResult(
+            section_id="sec-1",
+            change_type=ChangeType.SECTION_ADDED,
+            marker="1",
+        )
+
+        result = diff_result_to_dict(change)
+
+        assert result["section_id"] == "sec-1"
+        assert result["change_type"] == "section_added"
+        assert result["marker"] == "1"
+        assert result["old_marker_path"] is None
+        assert result["new_marker_path"] is None
+        assert result["old_id_path"] is None
+        assert result["new_id_path"] is None
+        assert result["old_content"] is None
+        assert result["new_content"] is None
+        assert result["old_title"] is None
+        assert result["new_title"] is None
+
+    def test_diff_result_to_dict_none_paths(self):
+        """Test converting DiffResult with None paths."""
+        change = DiffResult(
+            section_id="sec-1",
+            change_type=ChangeType.SECTION_ADDED,
+            marker="1",
+            old_marker_path=None,
+            new_marker_path=None,
+        )
+
+        result = diff_result_to_dict(change)
+
+        assert result["old_marker_path"] is None
+        assert result["new_marker_path"] is None
+
+
+class TestCalculateSummaryCounts:
+    """Tests for calculate_summary_counts utility."""
+
+    def test_calculate_summary_counts_all_types(self):
+        """Test calculating counts for all change types."""
+        changes = [
+            DiffResult(
+                section_id="1",
+                change_type=ChangeType.SECTION_ADDED,
+                marker="1",
+            ),
+            DiffResult(
+                section_id="2",
+                change_type=ChangeType.SECTION_REMOVED,
+                marker="2",
+            ),
+            DiffResult(
+                section_id="3",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="3",
+            ),
+            DiffResult(
+                section_id="4",
+                change_type=ChangeType.TITLE_CHANGED,
+                marker="4",
+            ),
+            DiffResult(
+                section_id="5",
+                change_type=ChangeType.SECTION_MOVED,
+                marker="5",
+            ),
+        ]
+
+        counts = calculate_summary_counts(changes)
+
+        assert counts["added_count"] == 1
+        assert counts["deleted_count"] == 1
+        assert counts["modified_count"] == 2  # CONTENT_CHANGED + TITLE_CHANGED
+        assert counts["moved_count"] == 1
+
+    def test_calculate_summary_counts_empty(self):
+        """Test calculating counts for empty list."""
+        counts = calculate_summary_counts([])
+
+        assert counts["added_count"] == 0
+        assert counts["deleted_count"] == 0
+        assert counts["modified_count"] == 0
+        assert counts["moved_count"] == 0
+
+    def test_calculate_summary_counts_multiple_same_type(self):
+        """Test calculating counts with multiple changes of same type."""
+        changes = [
+            DiffResult(
+                section_id="1",
+                change_type=ChangeType.SECTION_ADDED,
+                marker="1",
+            ),
+            DiffResult(
+                section_id="2",
+                change_type=ChangeType.SECTION_ADDED,
+                marker="2",
+            ),
+            DiffResult(
+                section_id="3",
+                change_type=ChangeType.SECTION_ADDED,
+                marker="3",
+            ),
+        ]
+
+        counts = calculate_summary_counts(changes)
+
+        assert counts["added_count"] == 3
+        assert counts["deleted_count"] == 0
+        assert counts["modified_count"] == 0
+        assert counts["moved_count"] == 0
 
 
 class TestJsonFormatter:

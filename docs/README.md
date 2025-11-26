@@ -15,6 +15,7 @@ The documentation is organized into four main categories:
 
 ### For Users
 
+- **[Installation Guide](user/installation.md)** - Complete installation instructions for all methods
 - **[Getting Started](user/getting_started.md)** - Quick start guide with installation and basic usage
 - **[Schema Reference](user/schema_reference.md)** - Complete OpenSpec schema documentation
 - **[Examples Guide](user/examples.md)** - How to use example documents and templates

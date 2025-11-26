@@ -290,3 +290,81 @@ def test_load_document_invalid_type() -> None:
         load_document(123)  # type: ignore[arg-type]
 
     assert "must be str, Path, or TextIO" in str(exc_info.value)
+
+
+def test_load_yaml_file_with_path_validation(tmp_path: Path, minimal_yaml_content: str) -> None:
+    """Test loading YAML file with path validation enabled."""
+    yaml_file = tmp_path / "test.yaml"
+    yaml_file.write_text(minimal_yaml_content, encoding="utf-8")
+
+    # Should work with validate_path=True and base_dir
+    data = load_yaml_file(yaml_file, validate_path=True, base_dir=tmp_path)
+    assert isinstance(data, dict)
+    assert "document" in data
+
+
+def test_load_yaml_file_permission_error(tmp_path: Path) -> None:
+    """Test loading YAML file with permission error."""
+    # Create a file and remove read permission (Unix only)
+    import stat
+
+    yaml_file = tmp_path / "no_read.yaml"
+    yaml_file.write_text("document:\n  id: test\n", encoding="utf-8")
+
+    # Try to remove read permission
+    try:
+        yaml_file.chmod(stat.S_IWRITE)  # Write-only
+        with pytest.raises(YAMLLoadError) as exc_info:
+            load_yaml_file(yaml_file)
+        assert (
+            "permission" in str(exc_info.value).lower() or "denied" in str(exc_info.value).lower()
+        )
+    except (OSError, PermissionError):
+        # On some systems, we can't remove read permission
+        # or the test itself doesn't have permission to do so
+        pass
+    finally:
+        # Restore permissions
+        try:
+            yaml_file.chmod(stat.S_IREAD | stat.S_IWRITE)
+        except (OSError, PermissionError):
+            pass
+
+
+def test_load_yaml_file_unicode_decode_error(tmp_path: Path) -> None:
+    """Test loading YAML file with invalid UTF-8 encoding."""
+    invalid_file = tmp_path / "invalid_utf8.yaml"
+    # Write invalid UTF-8 bytes
+    invalid_file.write_bytes(b"document:\n  title: \xff\xfe\xfd\n")
+
+    with pytest.raises(YAMLLoadError) as exc_info:
+        load_yaml_file(invalid_file)
+
+    assert "utf-8" in str(exc_info.value).lower() or "decode" in str(exc_info.value).lower()
+
+
+def test_load_yaml_non_dict_result() -> None:
+    """Test loading YAML that results in non-dict raises YAMLLoadError."""
+    # YAML that parses but isn't a dict
+    with pytest.raises(YAMLLoadError) as exc_info:
+        load_yaml("just a string")
+
+    assert "dictionary" in str(exc_info.value).lower()
+
+
+def test_load_yaml_os_error_from_file_like() -> None:
+    """Test loading YAML from file-like object that raises OSError."""
+    from io import StringIO
+
+    class ErrorFile(StringIO):
+        def read(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            raise OSError("Simulated I/O error")
+
+    error_file = ErrorFile("document:\n  id: test\n")
+
+    with pytest.raises(YAMLLoadError) as exc_info:
+        load_yaml(error_file)
+
+    assert (
+        "file-like object" in str(exc_info.value).lower() or "read" in str(exc_info.value).lower()
+    )

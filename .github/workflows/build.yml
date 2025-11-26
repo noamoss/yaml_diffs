@@ -38,6 +38,21 @@ jobs:
           python -c "from yaml_diffs import __version__; print(f'Package version: {__version__}')"
           python -c "import yaml_diffs; assert hasattr(yaml_diffs, '__version__'), 'Package missing __version__ attribute'"
 
+      - name: Test CLI commands
+        run: |
+          # Test CLI version command
+          yaml-diffs --version
+          # Test CLI help command
+          yaml-diffs --help
+
+      - name: Test library imports
+        run: |
+          python -c "from yaml_diffs import (load_document, validate_document, diff_documents, format_diff, Document, Section, __version__); print('All main imports successful!'); print(f'Version: {__version__}')"
+
+      - name: Test schema file access
+        run: |
+          python -c "from yaml_diffs.schema import load_schema; schema = load_schema(); assert schema is not None; assert 'version' in schema or 'info' in schema; print('Schema file accessible and loadable!')"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v5
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

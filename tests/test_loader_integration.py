@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from yaml_diffs.api import diff_documents, diff_files, format_diff, load_and_validate
 from yaml_diffs.loader import load_document
 from yaml_diffs.models import Document
 from yaml_diffs.validator import validate_document
@@ -140,3 +141,123 @@ def test_example_documents_hebrew_content(examples_dir: Path) -> None:
                 assert any(ord(c) >= 0x0590 and ord(c) <= 0x05FF for c in section.title), (
                     f"Section title should contain Hebrew characters: {section.title}"
                 )
+
+
+@pytest.mark.integration
+class TestFullWorkflowIntegration:
+    """Integration tests for complete workflows."""
+
+    def test_load_validate_diff_workflow(self, examples_dir: Path):
+        """Test complete workflow: load → validate → diff."""
+        v1_file = examples_dir / "document_v1.yaml"
+        v2_file = examples_dir / "document_v2.yaml"
+
+        if not (v1_file.exists() and v2_file.exists()):
+            pytest.skip("Example files not found")
+
+        # Load both documents
+        doc1 = load_document(v1_file)
+        doc2 = load_document(v2_file)
+
+        # Validate both documents
+        validated_doc1 = validate_document(v1_file)
+        validated_doc2 = validate_document(v2_file)
+
+        assert validated_doc1.id == doc1.id
+        assert validated_doc2.id == doc2.id
+
+        # Diff the documents
+        diff = diff_documents(doc1, doc2)
+
+        assert diff is not None
+        assert len(diff.changes) > 0
+
+    def test_load_and_validate_convenience(self, examples_dir: Path):
+        """Test load_and_validate convenience function."""
+        minimal_file = examples_dir / "minimal_document.yaml"
+
+        if not minimal_file.exists():
+            pytest.skip("Example file not found")
+
+        doc = load_and_validate(minimal_file)
+
+        assert isinstance(doc, Document)
+        assert doc.id == "law-1234"
+
+    def test_diff_files_convenience(self, examples_dir: Path):
+        """Test diff_files convenience function."""
+        v1_file = examples_dir / "document_v1.yaml"
+        v2_file = examples_dir / "document_v2.yaml"
+
+        if not (v1_file.exists() and v2_file.exists()):
+            pytest.skip("Example files not found")
+
+        diff = diff_files(v1_file, v2_file)
+
+        assert diff is not None
+        assert len(diff.changes) > 0
+
+    def test_complete_workflow_with_formatting(self, examples_dir: Path):
+        """Test complete workflow: load → diff → format."""
+        v1_file = examples_dir / "document_v1.yaml"
+        v2_file = examples_dir / "document_v2.yaml"
+
+        if not (v1_file.exists() and v2_file.exists()):
+            pytest.skip("Example files not found")
+
+        # Load and diff
+        doc1 = load_document(v1_file)
+        doc2 = load_document(v2_file)
+        diff = diff_documents(doc1, doc2)
+
+        # Format as JSON
+        json_output = format_diff(diff, output_format="json")
+        assert isinstance(json_output, str)
+        assert "summary" in json_output
+        assert "changes" in json_output
+
+        # Format as text
+        text_output = format_diff(diff, output_format="text")
+        assert isinstance(text_output, str)
+        assert "Document Diff Summary" in text_output or "Summary" in text_output
+
+        # Format as YAML
+        yaml_output = format_diff(diff, output_format="yaml")
+        assert isinstance(yaml_output, str)
+        assert "summary" in yaml_output or "changes" in yaml_output
+
+
+@pytest.mark.integration
+class TestErrorPropagation:
+    """Test error propagation through layers."""
+
+    def test_validation_error_propagation(self, tmp_path: Path):
+        """Test that validation errors propagate correctly."""
+        invalid_file = tmp_path / "invalid.yaml"
+        invalid_file.write_text(
+            """document:
+  id: "test"
+  # Missing required fields
+""",
+            encoding="utf-8",
+        )
+
+        # Should raise validation error
+        from yaml_diffs.exceptions import OpenSpecValidationError, PydanticValidationError
+
+        with pytest.raises((OpenSpecValidationError, PydanticValidationError)):
+            load_and_validate(invalid_file)
+
+    def test_yaml_error_propagation(self, tmp_path: Path):
+        """Test that YAML errors propagate correctly."""
+        invalid_yaml_file = tmp_path / "bad_yaml.yaml"
+        invalid_yaml_file.write_text(
+            "document:\n  id: [invalid: syntax\n",
+            encoding="utf-8",
+        )
+
+        # Should raise YAMLLoadError
+        from yaml_diffs.exceptions import YAMLLoadError
+
+        with pytest.raises(YAMLLoadError):
+            load_and_validate(invalid_yaml_file)

@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 from yaml_diffs.diff_types import ChangeType, DocumentDiff
 from yaml_diffs.formatters._filters import (
+    calculate_summary_counts,
+    diff_result_to_dict,
     filter_by_change_type,
     filter_by_section_path,
     format_marker_path,
@@ -89,6 +91,8 @@ def format_diff(
 
 
 __all__ = [
+    "calculate_summary_counts",
+    "diff_result_to_dict",
     "format_marker_path",
     "filter_by_change_type",
     "filter_by_section_path",

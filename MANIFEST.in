@@ -1,0 +1,18 @@
+# Include schema YAML files
+include src/yaml_diffs/schema/*.yaml
+
+# Include README
+include README.md
+
+# Exclude development files
+prune tests
+prune examples
+prune docs
+prune .github
+prune __pycache__
+global-exclude *.pyc
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude AGENTS.md
+exclude BRANCH_EXPLANATION.md
+exclude uv.lock

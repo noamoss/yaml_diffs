@@ -198,7 +198,7 @@ doc = validate_document("new_document.yaml")
 Compare versions of a document over time:
 
 ```python
-from yaml_diffs import diff_files
+from yaml_diffs import diff_files, ChangeType
 
 # Compare current version with previous
 diff = diff_files("document_2024-01.yaml", "document_2024-02.yaml")

@@ -8,3 +8,4 @@ health checks, and error handling.
 from yaml_diffs.api_server.main import app
 
 __all__ = ["app"]
+

@@ -443,6 +443,7 @@ The API automatically generates OpenAPI 3.0 specification available at:
 
 ## Related Documentation
 
-- [API Reference](../README.md#api-reference) - Library API documentation
-- [AGENTS.md](../AGENTS.md) - Development guide for AI agents
-- [README.md](../README.md) - Project overview and setup
+- [API Reference](../developer/api_reference.md) - Library API documentation
+- [AGENTS.md](../../AGENTS.md) - Development guide for AI agents
+- [README.md](../../README.md) - Project overview and setup
+- [Getting Started](../user/getting_started.md) - Quick start guide

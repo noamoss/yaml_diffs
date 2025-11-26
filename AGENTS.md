@@ -413,7 +413,126 @@ pytest -m "not slow"
 - **GitHub Actions**: CI/CD workflow automation
 - **Project Issues**: See GitHub issues for task tracking
 - **Project Board**: https://github.com/users/noamoss/projects/4
-- **CI/CD Documentation**: See `docs/ci_cd.md` for workflow details
+- **CI/CD Documentation**: See `docs/operations/ci_cd.md` for workflow details
+- **Documentation Index**: See `docs/README.md` for complete documentation overview
+
+## Documentation Maintenance
+
+### Documentation Organization
+
+Documentation is organized hierarchically by audience:
+
+```
+docs/
+├── user/                    # User-facing documentation
+│   ├── getting_started.md
+│   ├── examples.md
+│   └── schema_reference.md
+├── developer/               # Developer documentation
+│   ├── architecture.md
+│   ├── contributing.md
+│   └── api_reference.md
+├── api/                     # API documentation
+│   ├── api_server.md
+│   └── mcp_server.md
+└── operations/              # Operations documentation
+    └── ci_cd.md
+```
+
+### When to Update Documentation
+
+Update documentation when:
+- **Adding new features** - Document new functionality
+- **Changing existing behavior** - Update affected documentation
+- **Fixing bugs** - Update if behavior changes
+- **Adding examples** - Update examples guide
+- **Changing API** - Update API reference
+- **Moving files** - Update all cross-references
+
+### Documentation Standards
+
+#### Structure Standards
+- Use hierarchical organization by audience (user/developer/api/operations)
+- Each doc should have clear purpose and audience
+- Include table of contents for long documents
+- Use consistent heading structure
+
+#### Content Standards
+- All code examples must be valid and tested
+- Include Hebrew content examples where relevant
+- Link to related documentation
+- Keep examples up-to-date with code
+- Use clear, concise language
+
+#### Cross-Reference Maintenance
+- Use relative paths for internal links
+- Update links when files are moved
+- Test all links after reorganization
+- Use consistent link format: `[text](path/to/file.md)`
+
+### Documentation Testing
+
+Before committing documentation changes:
+
+1. **Test code examples:**
+   ```bash
+   # Verify Python examples are valid
+   python -c "from yaml_diffs import ..."
+
+   # Verify YAML examples validate
+   yaml-diffs validate examples/your_example.yaml
+   ```
+
+2. **Check links:**
+   - Verify all internal links work
+   - Check external links are accessible
+   - Ensure cross-references are correct
+
+3. **Validate markdown:**
+   - Ensure markdown renders correctly
+   - Check formatting is consistent
+   - Verify code blocks have proper syntax highlighting
+
+### Documentation File Locations
+
+- **User docs**: `docs/user/`
+- **Developer docs**: `docs/developer/`
+- **API docs**: `docs/api/`
+- **Operations docs**: `docs/operations/`
+- **Documentation index**: `docs/README.md`
+- **Main README**: `README.md`
+- **AI agent guide**: `AGENTS.md`
+
+### Updating Cross-References
+
+When moving or renaming documentation files:
+
+1. **Update all references** in:
+   - Other documentation files
+   - `README.md`
+   - `AGENTS.md`
+   - Code docstrings (if they reference docs)
+
+2. **Use relative paths:**
+   ```markdown
+   # From docs/user/getting_started.md
+   [Schema Reference](schema_reference.md)
+   [API Reference](../developer/api_reference.md)
+   [Main README](../../README.md)
+   ```
+
+3. **Test all links** after changes
+
+### Documentation Maintenance Checklist
+
+When making code changes, check:
+
+- [ ] Is documentation needed for this change?
+- [ ] Are code examples in docs still valid?
+- [ ] Do links still work?
+- [ ] Are cross-references correct?
+- [ ] Is the documentation index updated?
+- [ ] Are examples synchronized with code?
 
 ## Notes for AI Agents
 
@@ -424,6 +543,7 @@ pytest -m "not slow"
 - **Test thoroughly** with both minimal and complex examples
 - **Follow dependencies** - check task dependencies before starting work
 - **Update tests** when modifying functionality
+- **Update documentation** when code changes (see Documentation Maintenance section above)
 - **Check existing issues** before creating new ones
 - **CI/CD Validation**: Always run `pytest`, `ruff check`, and `mypy` locally before pushing - CI will fail if these don't pass
 - **Python Version Compatibility**: Ensure code works on Python 3.10, 3.11, 3.12 (CI tests all versions)

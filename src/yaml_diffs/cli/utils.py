@@ -75,3 +75,4 @@ def handle_cli_error(error: Exception, file_path: str | None = None) -> None:
         click.echo(f"Error: Unexpected error occurred{file_info}", err=True)
         click.echo(f"  {type(error).__name__}: {error}", err=True)
         sys.exit(1)
+

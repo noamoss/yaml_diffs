@@ -290,3 +290,4 @@ def test_load_document_invalid_type() -> None:
         load_document(123)  # type: ignore[arg-type]
 
     assert "must be str, Path, or TextIO" in str(exc_info.value)
+

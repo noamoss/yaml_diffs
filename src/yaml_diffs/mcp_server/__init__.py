@@ -9,3 +9,4 @@ from yaml_diffs.mcp_server.config import MCPServerConfig
 from yaml_diffs.mcp_server.server import run_server
 
 __all__ = ["MCPServerConfig", "run_server"]
+

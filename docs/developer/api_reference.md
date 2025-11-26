@@ -457,6 +457,7 @@ from yaml_diffs.diff import diff_documents
 
 ## See Also
 
-- [README.md](../README.md) - Project overview and installation
-- [AGENTS.md](../AGENTS.md) - Development guide for AI agents
-- [Schema Reference](schema_reference.md) - OpenSpec schema documentation (if available)
+- [README.md](../../README.md) - Project overview and installation
+- [AGENTS.md](../../AGENTS.md) - Development guide for AI agents
+- [Schema Reference](../user/schema_reference.md) - OpenSpec schema documentation
+- [Getting Started](../user/getting_started.md) - Quick start guide

@@ -48,3 +48,4 @@ def test_configuration_files_exist():
     for file_path in required_files:
         assert file_path.exists(), f"File {file_path} does not exist"
         assert file_path.is_file(), f"{file_path} is not a file"
+

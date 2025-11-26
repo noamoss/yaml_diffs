@@ -140,3 +140,4 @@ def test_example_documents_hebrew_content(examples_dir: Path) -> None:
                 assert any(ord(c) >= 0x0590 and ord(c) <= 0x05FF for c in section.title), (
                     f"Section title should contain Hebrew characters: {section.title}"
                 )
+

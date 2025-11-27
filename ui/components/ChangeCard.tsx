@@ -3,12 +3,15 @@
 import { useState, useEffect } from "react";
 import { DiffResult, ChangeType } from "@/lib/types";
 import { computeCharDiff, formatMarkerPath, DiffChunk } from "@/lib/diff-utils";
+import { extractSectionYaml } from "@/lib/yaml-extract";
 import { useDiscussionsStore } from "@/stores/discussions";
 import DiscussionThread from "./DiscussionThread";
 
 interface ChangeCardProps {
   change: DiffResult;
   index: number;
+  oldYaml?: string;
+  newYaml?: string;
 }
 
 function getChangeTypeStyles(changeType: ChangeType) {
@@ -177,10 +180,14 @@ function DiffContent({ oldContent, newContent }: DiffContentProps) {
   );
 }
 
-export default function ChangeCard({ change, index }: ChangeCardProps) {
+export default function ChangeCard({ change, index, oldYaml, newYaml }: ChangeCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showDiscussion, setShowDiscussion] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [oldSectionYaml, setOldSectionYaml] = useState<string | null>(null);
+  const [newSectionYaml, setNewSectionYaml] = useState<string | null>(null);
+  const [loadingSections, setLoadingSections] = useState(false);
+  const [showFullSection, setShowFullSection] = useState(false);
 
   const styles = getChangeTypeStyles(change.change_type);
 
@@ -237,6 +244,42 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
     },
   };
 
+  // Extract section YAML when YAML files or marker paths change
+  useEffect(() => {
+    const extractSections = async () => {
+      if (!oldYaml && !newYaml) {
+        setOldSectionYaml(null);
+        setNewSectionYaml(null);
+        return;
+      }
+
+      setLoadingSections(true);
+      try {
+        if (oldYaml && change.old_marker_path) {
+          const oldSection = await extractSectionYaml(oldYaml, change.old_marker_path);
+          setOldSectionYaml(oldSection);
+        } else {
+          setOldSectionYaml(null);
+        }
+
+        if (newYaml && change.new_marker_path) {
+          const newSection = await extractSectionYaml(newYaml, change.new_marker_path);
+          setNewSectionYaml(newSection);
+        } else {
+          setNewSectionYaml(null);
+        }
+      } catch (error) {
+        console.error("Error extracting sections:", error);
+        setOldSectionYaml(null);
+        setNewSectionYaml(null);
+      } finally {
+        setLoadingSections(false);
+      }
+    };
+
+    extractSections();
+  }, [oldYaml, newYaml, change.old_marker_path, change.new_marker_path]);
+
   const hasPathChange =
     JSON.stringify(change.old_marker_path) !==
     JSON.stringify(change.new_marker_path);
@@ -245,6 +288,14 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
     change.old_content !== change.new_content ||
     (change.old_content === null && change.new_content !== null) ||
     (change.old_content !== null && change.new_content === null);
+  const hasFullSection = oldSectionYaml !== null || newSectionYaml !== null;
+
+  // Detect if sections are unchanged (identical YAML or change type is UNCHANGED)
+  const isSectionUnchanged =
+    change.change_type === ChangeType.UNCHANGED ||
+    (oldSectionYaml !== null &&
+      newSectionYaml !== null &&
+      oldSectionYaml === newSectionYaml);
 
   return (
     <div className={`border rounded-lg ${styles.bg} ${isExpanded ? "" : "overflow-hidden"}`}>
@@ -325,6 +376,95 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
                   newContent={change.new_content}
                 />
               </div>
+            </div>
+          )}
+
+          {hasFullSection && (
+            <div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFullSection(!showFullSection);
+                }}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 hover:text-gray-900"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    showFullSection ? "rotate-90" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+                Full Section YAML
+              </button>
+              {showFullSection && (
+                <div className="mt-2">
+                  {loadingSections ? (
+                    <div className="text-sm text-gray-500 italic">Loading sections...</div>
+                  ) : isSectionUnchanged ? (
+                    // Unchanged section: show once with grey background
+                    <div>
+                      <h5 className="text-xs font-semibold text-gray-600 mb-1">Both Versions:</h5>
+                      <div className="bg-gray-50 border border-gray-200 rounded p-3 overflow-x-auto">
+                        <pre className="whitespace-pre-wrap text-xs font-mono text-gray-800">
+                          {oldSectionYaml || newSectionYaml}
+                        </pre>
+                      </div>
+                    </div>
+                  ) : (
+                    // Changed section: show side-by-side (old left, new right)
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {oldSectionYaml ? (
+                        <div>
+                          <h5 className="text-xs font-semibold text-gray-600 mb-1">Old Version:</h5>
+                          <div className="bg-red-50 border border-red-200 rounded p-3 overflow-x-auto">
+                            <pre className="whitespace-pre-wrap text-xs font-mono text-gray-800">
+                              {oldSectionYaml}
+                            </pre>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <h5 className="text-xs font-semibold text-gray-600 mb-1">Old Version:</h5>
+                          <div className="bg-red-50 border border-red-200 rounded p-3">
+                            <div className="text-xs text-gray-500 italic">(empty)</div>
+                          </div>
+                        </div>
+                      )}
+                      {newSectionYaml ? (
+                        <div>
+                          <h5 className="text-xs font-semibold text-gray-600 mb-1">New Version:</h5>
+                          <div className="bg-green-50 border border-green-200 rounded p-3 overflow-x-auto">
+                            <pre className="whitespace-pre-wrap text-xs font-mono text-gray-800">
+                              {newSectionYaml}
+                            </pre>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <h5 className="text-xs font-semibold text-gray-600 mb-1">New Version:</h5>
+                          <div className="bg-green-50 border border-green-200 rounded p-3">
+                            <div className="text-xs text-gray-500 italic">(empty)</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!oldSectionYaml && !newSectionYaml && !loadingSections && (
+                    <div className="text-sm text-gray-500 italic">
+                      Could not extract section YAML
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

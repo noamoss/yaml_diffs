@@ -188,8 +188,8 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
   // Use a combination of section_id, change_type, marker, and index to ensure uniqueness
   const changeId = change.id || `fallback-${change.section_id || 'unknown'}-${change.change_type || 'unknown'}-${change.marker || 'unknown'}-${index}`;
 
-  // Only log warning if id is missing (not using fallback)
-  if (!change.id) {
+  // Only log warning in development mode if id is missing (not using fallback)
+  if (!change.id && process.env.NODE_ENV === 'development') {
     console.warn("ChangeCard: change.id is missing, using fallback ID", { changeId, change });
   }
 

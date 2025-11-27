@@ -19,7 +19,7 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 - **Recursive Structure**: Documents use recursive sections with unlimited nesting depth
 - **Marker-Based Diffing**: Sections are matched by markers (not IDs) for reliable diffing across versions. All sections must have unique markers at each nesting level.
 - **Hebrew Support**: Full UTF-8 support for Hebrew legal text throughout
-- **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), REST API (`/api/v1/*`), and MCP Server
+- **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), REST API (`/api/v1/*`), MCP Server, and Web UI (Next.js)
 - **Schema Validation**: Dual validation via OpenSpec (contract) and Pydantic (runtime)
 
 ## CI/CD Status
@@ -71,6 +71,12 @@ yaml-diffs/
 │       ├── cli/             # CLI tool
 │       ├── api_server/      # FastAPI REST API
 │       └── mcp_server/      # MCP server for AI assistants
+├── ui/                      # Next.js Web UI
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # React components
+│   ├── lib/                 # Utilities and API client
+│   ├── stores/              # Zustand state management
+│   └── package.json         # Node.js dependencies
 ├── tests/                   # Test suite
 ├── examples/                # Example YAML documents
 │   ├── minimal_document.yaml
@@ -214,6 +220,40 @@ yaml-diffs mcp-server --api-url http://api.example.com:8000 --api-key your-key
 - `YAML_DIFFS_API_TIMEOUT`: Request timeout in seconds (default: `30`)
 
 For detailed MCP server documentation, see [docs/api/mcp_server.md](docs/api/mcp_server.md).
+
+### Web UI
+
+The Web UI provides a GitHub PR-style interface for viewing and commenting on YAML document diffs. Built with Next.js, it offers an intuitive way to compare document versions and discuss changes.
+
+**Quick Start:**
+
+```bash
+# Navigate to UI directory
+cd ui
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+The UI will be available at http://localhost:3000 by default.
+
+**Features:**
+- GitHub PR-style diff viewer with change cards
+- CodeMirror YAML editor with syntax highlighting and RTL support
+- Threaded discussions attached to individual changes
+- Character-level diff highlighting
+- JSON export of diff results and discussions
+
+**Configuration:**
+- `NEXT_PUBLIC_API_URL`: Railway API URL (default: `http://localhost:8000`)
+
+For detailed UI setup, deployment, and configuration instructions, see [ui/README.md](ui/README.md).
 
 ### Deployment
 

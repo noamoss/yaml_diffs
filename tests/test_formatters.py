@@ -237,6 +237,7 @@ class TestDiffResultToDict:
 
         result = diff_result_to_dict(change)
 
+        assert result["id"] == change.id
         assert result["section_id"] == "sec-1"
         assert result["change_type"] == "content_changed"
         assert result["marker"] == "1"
@@ -260,6 +261,7 @@ class TestDiffResultToDict:
 
         result = diff_result_to_dict(change)
 
+        assert result["id"] == change.id
         assert result["section_id"] == "sec-1"
         assert result["change_type"] == "section_added"
         assert result["marker"] == "1"
@@ -285,6 +287,7 @@ class TestDiffResultToDict:
 
         result = diff_result_to_dict(change)
 
+        assert result["id"] == change.id
         assert result["old_marker_path"] is None
         assert result["new_marker_path"] is None
 

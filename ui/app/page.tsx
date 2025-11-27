@@ -49,13 +49,18 @@ export default function Home() {
       return;
     }
 
-    // Basic validation - check if YAML starts with 'document:'
-    if (!oldYaml.trim().startsWith('document:') && !oldYaml.trim().startsWith('document')) {
-      setError("YAML must start with 'document:' at the top level. Example:\n\ndocument:\n  id: \"test\"\n  title: \"Test\"\n  ...");
+    // Basic validation - check if YAML contains 'document:' key
+    // Allow whitespace/comments before document: key
+    const oldYamlTrimmed = oldYaml.trim();
+    const newYamlTrimmed = newYaml.trim();
+    const documentKeyPattern = /^#.*\n?document:|^document:/m;
+
+    if (!documentKeyPattern.test(oldYamlTrimmed)) {
+      setError("YAML must have 'document:' as the top-level key. Example:\n\ndocument:\n  id: \"test\"\n  title: \"Test\"\n  ...");
       return;
     }
-    if (!newYaml.trim().startsWith('document:') && !newYaml.trim().startsWith('document')) {
-      setError("YAML must start with 'document:' at the top level. Example:\n\ndocument:\n  id: \"test\"\n  title: \"Test\"\n  ...");
+    if (!documentKeyPattern.test(newYamlTrimmed)) {
+      setError("YAML must have 'document:' as the top-level key. Example:\n\ndocument:\n  id: \"test\"\n  title: \"Test\"\n  ...");
       return;
     }
 

@@ -120,6 +120,7 @@ def diff_result_to_dict(change: DiffResult) -> dict[str, Any]:
         Dictionary representation suitable for JSON/YAML serialization
     """
     result: dict[str, Any] = {
+        "id": change.id,
         "section_id": change.section_id,
         "change_type": change.change_type.value,
         "marker": change.marker,

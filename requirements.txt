@@ -1,0 +1,12 @@
+# Requirements file for Railway/Nixpacks deployment
+# This file is auto-generated from pyproject.toml dependencies
+# For local development, use: uv sync
+
+click>=8.0.0
+httpx>=0.24.0
+jsonschema>=4.0.0
+mcp>=1.0.0
+pydantic>=2.0.0
+pyyaml>=6.0
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0

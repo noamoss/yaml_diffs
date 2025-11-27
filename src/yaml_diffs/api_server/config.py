@@ -28,7 +28,9 @@ class Settings:
             else []  # Default to no CORS origins (most secure)
         )
         # Warn if CORS is too permissive in production
-        if self.cors_origins == ["*"] and os.getenv("ENVIRONMENT") == "production":
+        # Check both ENVIRONMENT and RAILWAY_ENVIRONMENT for flexibility
+        environment = os.getenv("ENVIRONMENT") or os.getenv("RAILWAY_ENVIRONMENT", "")
+        if self.cors_origins == ["*"] and environment == "production":
             logging.warning(
                 "CORS is set to allow all origins (*). This is insecure for production!"
             )
@@ -76,11 +78,13 @@ class Settings:
         """Get port from PORT environment variable (Railway requirement).
 
         Railway sets the PORT environment variable, which takes precedence
-        over the default port setting.
+        over the default port setting. This property provides direct access
+        to the port value for Railway deployments.
 
         Returns:
             Port number from PORT env var, or default port if not set.
         """
+        # Return the port value (already read from PORT env var in __init__)
         return self.port
 
 

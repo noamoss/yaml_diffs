@@ -282,30 +282,59 @@ The API is designed for Railway deployment with the following features:
 4. **Production Logging**: Configurable logging for production environment
 5. **CORS Support**: Configurable CORS for cross-origin requests
 
-### Railway Setup
+### Quick Setup
 
 1. **Connect Repository**: Connect your GitHub repository to Railway
 2. **Configure Environment Variables**: Set any required environment variables in Railway dashboard
 3. **Deploy**: Railway will automatically deploy on push to main branch
 4. **Monitor**: Use Railway dashboard to monitor health checks and logs
 
+### Configuration Files
+
+The project includes Railway configuration files:
+
+- **`railway.json`**: Railway platform configuration with build and start commands
+- **`.env.example`**: Example environment variables file (see [Environment Variables](#environment-variables))
+
 ### Railway Start Command
 
-Railway will automatically detect the Python application. The start command should be:
+The start command is configured in `Procfile` (recommended) or `railway.json`:
 
-```bash
-uvicorn src.yaml_diffs.api_server.main:app --host 0.0.0.0 --port ${PORT:-8000}
+**Procfile**:
+```
+web: uvicorn yaml_diffs.api_server.main:app --host 0.0.0.0 --port $PORT
 ```
 
-Or using the package entry point (if configured):
-
-```bash
-python -m yaml_diffs.api_server.main
+**railway.json** (alternative):
+```json
+{
+  "deploy": {
+    "startCommand": "uvicorn yaml_diffs.api_server.main:app --host 0.0.0.0 --port $PORT"
+  }
+}
 ```
+
+**Note:**
+- Railway installs the package, so the start command uses the installed package name `yaml_diffs` (not `src.yaml_diffs`)
+- For local development from the project root, use `src.yaml_diffs.api_server.main:app`
+- Railway/Nixpacks more reliably detects start commands from `Procfile` than from `railway.json`
+
+Railway automatically sets the `PORT` environment variable, which the application reads at startup.
 
 ### Health Checks
 
-Railway will automatically monitor the `/health` endpoint. Ensure it returns `200 OK` for successful health checks.
+Railway automatically monitors the `/health` endpoint (configured in `railway.json`). The endpoint returns `200 OK` with a JSON response when the service is healthy:
+
+```json
+{
+  "status": "healthy",
+  "version": "0.1.0"
+}
+```
+
+### Detailed Deployment Guide
+
+For comprehensive deployment instructions, environment variable configuration, troubleshooting, and production best practices, see the [Railway Deployment Guide](../operations/deployment.md).
 
 ## Examples
 

@@ -20,7 +20,9 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 if [ -f "$PROJECT_ROOT/.env" ]; then
     # Export variables from .env file
     set -a
-    source "$PROJECT_ROOT/.env"
+    if ! source "$PROJECT_ROOT/.env" 2>/dev/null; then
+        echo "Warning: Failed to source .env file, continuing without it" >&2
+    fi
     set +a
 fi
 

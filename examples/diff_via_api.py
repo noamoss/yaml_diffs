@@ -35,11 +35,13 @@ def diff_documents(api_url: str, old_yaml_path: str, new_yaml_path: str):
         sys.exit(1)
 
     # Make API request
+    # Get timeout from environment variable or use default
+    timeout = float(os.getenv("YAML_DIFFS_API_TIMEOUT", "30.0"))
     try:
         response = httpx.post(
             f"{api_url}/api/v1/diff",
             json={"old_yaml": old_yaml, "new_yaml": new_yaml},
-            timeout=30.0,
+            timeout=timeout,
         )
         response.raise_for_status()
     except httpx.HTTPStatusError as e:
@@ -115,7 +117,8 @@ if __name__ == "__main__":
         print("    (uses provided API URL)")
         print("")
         print("Environment Variables:")
-        print("  YAML_DIFFS_API_URL  Base URL of the API (default: http://localhost:8000)")
+        print("  YAML_DIFFS_API_URL      Base URL of the API (default: http://localhost:8000)")
+        print("  YAML_DIFFS_API_TIMEOUT  Request timeout in seconds (default: 30.0)")
         print("")
         print("Note: Create a .env file from .env.example to configure the API URL.")
         sys.exit(1)

@@ -31,6 +31,7 @@ class DiffResult(BaseModel):
     """Represents a single change detected in document diffing.
 
     Attributes:
+        id: Unique identifier for this change (UUID)
         section_id: The section ID (for tracking, from old or new version)
         change_type: Type of change detected
         marker: The section marker (primary identifier)
@@ -44,6 +45,10 @@ class DiffResult(BaseModel):
         new_title: Title in new version
     """
 
+    id: str = Field(
+        description="Unique identifier for this change (UUID)",
+        min_length=1,
+    )
     section_id: str = Field(
         description="The section ID (for tracking, from old or new version)",
         min_length=1,

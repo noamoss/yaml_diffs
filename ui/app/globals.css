@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Diff colors - GitHub-inspired */
+  --diff-add-bg: #dafbe1;
+  --diff-add-text: #1a7f37;
+  --diff-remove-bg: #ffebe9;
+  --diff-remove-text: #cf222e;
+  --diff-modify-bg: #fff8c5;
+  --diff-modify-text: #9a6700;
+  --diff-move-bg: #fbefff;
+  --diff-move-text: #8250df;
+
+  /* Typography */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* Tailwind v4 theme configuration - using standard CSS variables */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* CodeMirror overrides */
+.cm-editor {
+  height: 100%;
+}
+
+.cm-scroller {
+  font-family: var(--font-mono), 'Fira Code', monospace;
+}
+
+/* RTL support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from yaml_diffs.diff_types import ChangeType, DiffResult, DocumentDiff
 from yaml_diffs.models import Document, Section
@@ -279,6 +280,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         if content_changed:
             changes.append(
                 DiffResult(
+                    id=str(uuid4()),
                     section_id=old_section.id,
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker=old_section.marker,
@@ -293,6 +295,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         if title_changed:
             changes.append(
                 DiffResult(
+                    id=str(uuid4()),
                     section_id=old_section.id,
                     change_type=ChangeType.TITLE_CHANGED,
                     marker=old_section.marker,
@@ -307,6 +310,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         if not content_changed and not title_changed:
             changes.append(
                 DiffResult(
+                    id=str(uuid4()),
                     section_id=old_section.id,
                     change_type=ChangeType.UNCHANGED,
                     marker=old_section.marker,
@@ -335,6 +339,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         # Add SECTION_MOVED change
         changes.append(
             DiffResult(
+                id=str(uuid4()),
                 section_id=old_section.id,
                 change_type=ChangeType.SECTION_MOVED,
                 marker=old_section.marker,
@@ -352,6 +357,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         if title_changed:
             changes.append(
                 DiffResult(
+                    id=str(uuid4()),
                     section_id=old_section.id,
                     change_type=ChangeType.TITLE_CHANGED,
                     marker=old_section.marker,
@@ -371,6 +377,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         if content_changed:
             changes.append(
                 DiffResult(
+                    id=str(uuid4()),
                     section_id=old_section.id,
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker=old_section.marker,
@@ -388,6 +395,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
     for _old_key, (old_section, old_marker_path, old_id_path) in unmatched_old.items():
         changes.append(
             DiffResult(
+                id=str(uuid4()),
                 section_id=old_section.id,
                 change_type=ChangeType.SECTION_REMOVED,
                 marker=old_section.marker,
@@ -402,6 +410,7 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
     for _new_key, (new_section, new_marker_path, new_id_path) in unmatched_new.items():
         changes.append(
             DiffResult(
+                id=str(uuid4()),
                 section_id=new_section.id,
                 change_type=ChangeType.SECTION_ADDED,
                 marker=new_section.marker,

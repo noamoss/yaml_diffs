@@ -9,7 +9,7 @@ This file provides essential context and instructions for AI coding agents worki
 - **Schema Layer**: OpenSpec definition (language-agnostic contract) for document structure
 - **Model Layer**: Pydantic models for Python runtime validation
 - **Core Logic**: Document diffing, validation, and transformation utilities
-- **Interface Layer**: Python library API, CLI tool, and REST API (FastAPI)
+- **Interface Layer**: Python library API, CLI tool, REST API (FastAPI), and Web UI (Next.js)
 - **Deployment**: Railway-hosted REST API service
 
 The project supports unlimited nesting, flexible structural markers, Hebrew content, and provides foundation for RAG integration with exact citation tracking.
@@ -91,14 +91,21 @@ yaml-diffs/
 │       ├── cli/                 # CLI tool
 │       │   ├── main.py
 │       │   └── commands.py
-│       └── api_server/          # FastAPI REST API
-│           ├── main.py
-│           ├── config.py
-│           ├── routers/
-│           │   ├── validate.py
-│           │   ├── diff.py
-│           │   └── health.py
-│           └── schemas.py
+│       ├── api_server/          # FastAPI REST API
+│       │   ├── main.py
+│       │   ├── config.py
+│       │   ├── routers/
+│       │   │   ├── validate.py
+│       │   │   ├── diff.py
+│       │   │   └── health.py
+│       │   └── schemas.py
+│       └── mcp_server/          # MCP server for AI assistants
+├── ui/                          # Next.js Web UI
+│   ├── app/                     # Next.js App Router pages
+│   ├── components/              # React components
+│   ├── lib/                     # Utilities and API client
+│   ├── stores/                  # Zustand state management
+│   └── package.json             # Node.js dependencies
 ├── tests/                       # Test suite
 │   ├── test_models.py
 │   ├── test_loader.py
@@ -208,6 +215,37 @@ uvicorn src.yaml_diffs.api_server.main:app --reload --port 8000
 # Run with Railway port (production)
 uvicorn src.yaml_diffs.api_server.main:app --host 0.0.0.0 --port ${PORT:-8000}
 ```
+
+### UI Development Commands
+
+The Web UI is a Next.js application located in the `ui/` directory.
+
+```bash
+# Navigate to UI directory
+cd ui
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+**UI Development Notes:**
+- **Framework**: Next.js 16+ with App Router, TypeScript, and Tailwind CSS
+- **State Management**: Zustand for local state (discussions), React Query for API state
+- **API Integration**: Connects to Railway API via `NEXT_PUBLIC_API_URL` environment variable
+- **CORS Configuration**: Ensure Railway API has `CORS_ORIGINS` set to include UI domain (e.g., `http://localhost:3000` for local dev)
+- **Comments System**: Comments are attached to individual changes (DiffResult.id), not sections
+- **Deployment**: UI can be deployed to Vercel or similar platforms; see `ui/README.md` for details
+
+For detailed UI setup and deployment instructions, see [ui/README.md](../ui/README.md).
 
 ## Code Style and Conventions
 

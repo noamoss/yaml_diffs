@@ -21,8 +21,18 @@ def diff_documents(api_url: str, old_yaml_path: str, new_yaml_path: str):
         new_yaml_path: Path to the new version YAML file
     """
     # Read YAML files
-    old_yaml = Path(old_yaml_path).read_text(encoding="utf-8")
-    new_yaml = Path(new_yaml_path).read_text(encoding="utf-8")
+    try:
+        old_yaml = Path(old_yaml_path).read_text(encoding="utf-8")
+        new_yaml = Path(new_yaml_path).read_text(encoding="utf-8")
+    except FileNotFoundError as e:
+        print(f"❌ File not found: {e.filename}", file=sys.stderr)
+        sys.exit(1)
+    except UnicodeDecodeError as e:
+        print(f"❌ Encoding error reading file: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error reading file: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Make API request
     try:

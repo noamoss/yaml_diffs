@@ -4,6 +4,15 @@
 # Example: ./scripts/verify_railway_deployment.sh https://yaml-diffs.up.railway.app
 # Or for internal: ./scripts/verify_railway_deployment.sh http://yaml_diffs.railway.internal
 
+# Check for required tools
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is required but not installed."
+    echo "Install it with: brew install jq  # macOS"
+    echo "                or: apt-get install jq  # Debian/Ubuntu"
+    echo "                or: yum install jq  # RHEL/CentOS"
+    exit 1
+fi
+
 # Source .env file if it exists (for local development)
 # This allows the script to use YAML_DIFFS_API_URL from .env as default
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

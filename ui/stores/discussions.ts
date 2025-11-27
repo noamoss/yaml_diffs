@@ -16,6 +16,14 @@ export interface Discussion {
   comments: Comment[];
 }
 
+// Legacy format for migration purposes
+interface OldDiscussionFormat {
+  sectionId?: string;
+  changeId?: string;
+  id?: string;
+  comments?: Comment[];
+}
+
 interface DiscussionsState {
   discussions: Discussion[];
   addDiscussion: (changeId: string) => string; // Returns discussion ID
@@ -168,12 +176,13 @@ export const useDiscussionsStore = create<DiscussionsState>()(
         }
 
         // Filter out any discussions with invalid format (migration from old sectionId format)
-        const discussions = get().discussions.filter((d) => {
-          if (!d.changeId && (d as any).sectionId) {
+        const discussions = get().discussions.filter((d): d is Discussion => {
+          const oldFormat = d as unknown as OldDiscussionFormat;
+          if (!d.changeId && oldFormat.sectionId) {
             // Old format - remove it
             return false;
           }
-          return d.changeId;
+          return !!d.changeId;
         });
 
         // If we filtered out old discussions, update the store
@@ -197,9 +206,10 @@ export const useDiscussionsStore = create<DiscussionsState>()(
       migrate: (persistedState: any, version: number) => {
         // Clear old data with sectionId format
         if (persistedState?.discussions) {
-          const validDiscussions = persistedState.discussions.filter((d: any) => {
+          const validDiscussions = persistedState.discussions.filter((d: unknown): d is Discussion => {
+            const oldFormat = d as unknown as OldDiscussionFormat;
             // Only keep discussions with changeId (new format)
-            return d.changeId && !d.sectionId;
+            return !!oldFormat.changeId && !oldFormat.sectionId;
           });
           return { ...persistedState, discussions: validDiscussions };
         }

@@ -183,8 +183,18 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
   const [commentText, setCommentText] = useState("");
 
   const styles = getChangeTypeStyles(change.change_type);
+
+  // Generate a stable ID for this change if missing (fallback for older API versions)
+  // Use a combination of section_id, change_type, marker, and index to ensure uniqueness
+  const changeId = change.id || `fallback-${change.section_id || 'unknown'}-${change.change_type || 'unknown'}-${change.marker || 'unknown'}-${index}`;
+
+  // Only log warning if id is missing (not using fallback)
+  if (!change.id) {
+    console.warn("ChangeCard: change.id is missing, using fallback ID", { changeId, change });
+  }
+
   const discussion = useDiscussionsStore((state) =>
-    state.getDiscussion(change.section_id)
+    state.getDiscussion(changeId)
   );
   const addDiscussion = useDiscussionsStore((state) => state.addDiscussion);
   const addComment = useDiscussionsStore((state) => state.addComment);
@@ -193,10 +203,14 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
 
   const handleAddComment = () => {
     if (!commentText.trim()) return;
+    if (!changeId) {
+      console.error("Cannot add comment: changeId is missing");
+      return;
+    }
 
     const discussionId = discussion
       ? discussion.id
-      : addDiscussion(change.section_id);
+      : addDiscussion(changeId);
     addComment(discussionId, commentText);
     setCommentText("");
     setShowDiscussion(true);
@@ -204,9 +218,13 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
 
   const handleDiscussionActions = {
     onAddComment: (text: string, parentCommentId?: string) => {
+      if (!changeId) {
+        console.error("Cannot add comment: changeId is missing");
+        return;
+      }
       const discussionId = discussion
         ? discussion.id
-        : addDiscussion(change.section_id);
+        : addDiscussion(changeId);
       addComment(discussionId, text, parentCommentId);
     },
     onEditComment: (commentId: string, text: string) => {
@@ -315,8 +333,8 @@ export default function ChangeCard({ change, index }: ChangeCardProps) {
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDiscussion(!showDiscussion);
-                if (!discussion) {
-                  addDiscussion(change.section_id);
+                if (!discussion && changeId) {
+                  addDiscussion(changeId);
                 }
               }}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"

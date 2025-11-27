@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from uuid import uuid4
 
 import pytest
 import yaml
@@ -55,11 +56,13 @@ class TestFilterByChangeType:
         """Test filtering with None (no filter)."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="1",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="2",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="2",
@@ -72,11 +75,13 @@ class TestFilterByChangeType:
         """Test filtering by single change type."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="1",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="2",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="2",
@@ -90,16 +95,19 @@ class TestFilterByChangeType:
         """Test filtering by multiple change types."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="1",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="2",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="2",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="3",
                 change_type=ChangeType.SECTION_REMOVED,
                 marker="3",
@@ -118,6 +126,7 @@ class TestFilterBySectionPath:
         """Test filtering with None (no filter)."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="1",
@@ -131,12 +140,14 @@ class TestFilterBySectionPath:
         """Test filtering by old marker path."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="1",
                 old_marker_path=("פרק א'", "1"),
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="2",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="2",
@@ -151,6 +162,7 @@ class TestFilterBySectionPath:
         """Test filtering by new marker path."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="1",
@@ -164,6 +176,7 @@ class TestFilterBySectionPath:
         """Test filtering with empty string (should return all)."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="1",
@@ -177,6 +190,7 @@ class TestFilterBySectionPath:
         """Test filtering with whitespace-only string (should return all)."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="1",
@@ -190,6 +204,7 @@ class TestFilterBySectionPath:
         """Test filtering with path that doesn't match."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="1",
@@ -206,6 +221,7 @@ class TestDiffResultToDict:
     def test_diff_result_to_dict_full(self):
         """Test converting DiffResult with all fields to dict."""
         change = DiffResult(
+            id=str(uuid4()),
             section_id="sec-1",
             change_type=ChangeType.CONTENT_CHANGED,
             marker="1",
@@ -236,6 +252,7 @@ class TestDiffResultToDict:
     def test_diff_result_to_dict_minimal(self):
         """Test converting minimal DiffResult to dict."""
         change = DiffResult(
+            id=str(uuid4()),
             section_id="sec-1",
             change_type=ChangeType.SECTION_ADDED,
             marker="1",
@@ -258,6 +275,7 @@ class TestDiffResultToDict:
     def test_diff_result_to_dict_none_paths(self):
         """Test converting DiffResult with None paths."""
         change = DiffResult(
+            id=str(uuid4()),
             section_id="sec-1",
             change_type=ChangeType.SECTION_ADDED,
             marker="1",
@@ -278,26 +296,31 @@ class TestCalculateSummaryCounts:
         """Test calculating counts for all change types."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="1",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="2",
                 change_type=ChangeType.SECTION_REMOVED,
                 marker="2",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="3",
                 change_type=ChangeType.CONTENT_CHANGED,
                 marker="3",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="4",
                 change_type=ChangeType.TITLE_CHANGED,
                 marker="4",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="5",
                 change_type=ChangeType.SECTION_MOVED,
                 marker="5",
@@ -324,16 +347,19 @@ class TestCalculateSummaryCounts:
         """Test calculating counts with multiple changes of same type."""
         changes = [
             DiffResult(
+                id=str(uuid4()),
                 section_id="1",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="1",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="2",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="2",
             ),
             DiffResult(
+                id=str(uuid4()),
                 section_id="3",
                 change_type=ChangeType.SECTION_ADDED,
                 marker="3",
@@ -356,6 +382,7 @@ class TestJsonFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -383,6 +410,7 @@ class TestJsonFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.SECTION_ADDED,
                     marker="1",
@@ -407,6 +435,7 @@ class TestJsonFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="sec-1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -431,11 +460,13 @@ class TestJsonFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.SECTION_ADDED,
                     marker="1",
                 ),
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="2",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="2",
@@ -453,12 +484,14 @@ class TestJsonFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
                     old_marker_path=("פרק א'", "1"),
                 ),
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="2",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="2",
@@ -490,6 +523,7 @@ class TestTextFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -513,6 +547,7 @@ class TestTextFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -530,6 +565,7 @@ class TestTextFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -548,11 +584,13 @@ class TestTextFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.SECTION_ADDED,
                     marker="1",
                 ),
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="2",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="2",
@@ -569,6 +607,7 @@ class TestTextFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -585,6 +624,7 @@ class TestTextFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -607,6 +647,7 @@ class TestYamlFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -628,6 +669,7 @@ class TestYamlFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.SECTION_ADDED,
                     marker="1",
@@ -647,6 +689,7 @@ class TestYamlFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="sec-1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -671,11 +714,13 @@ class TestYamlFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.SECTION_ADDED,
                     marker="1",
                 ),
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="2",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="2",
@@ -693,6 +738,7 @@ class TestYamlFormatter:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -714,6 +760,7 @@ class TestFormatDiffConvenience:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -729,6 +776,7 @@ class TestFormatDiffConvenience:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -743,6 +791,7 @@ class TestFormatDiffConvenience:
         diff = DocumentDiff(
             changes=[
                 DiffResult(
+                    id=str(uuid4()),
                     section_id="1",
                     change_type=ChangeType.CONTENT_CHANGED,
                     marker="1",
@@ -762,6 +811,7 @@ class TestFormatDiffConvenience:
     def test_format_diff_filters_invalid_kwargs(self):
         """Test that format_diff silently ignores invalid kwargs for each formatter."""
         change = DiffResult(
+            id=str(uuid4()),
             section_id="test-1",
             change_type=ChangeType.CONTENT_CHANGED,
             marker="1",
@@ -792,6 +842,7 @@ class TestFormatDiffConvenience:
         """Test that text formatter displays title changes involving empty strings."""
         # Test: title changes from empty string to None
         change1 = DiffResult(
+            id=str(uuid4()),
             section_id="test-1",
             change_type=ChangeType.TITLE_CHANGED,
             marker="1",
@@ -805,6 +856,7 @@ class TestFormatDiffConvenience:
 
         # Test: title changes from None to empty string
         change2 = DiffResult(
+            id=str(uuid4()),
             section_id="test-2",
             change_type=ChangeType.TITLE_CHANGED,
             marker="2",

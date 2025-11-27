@@ -12,17 +12,17 @@ export interface Comment {
 
 export interface Discussion {
   id: string;
-  sectionId: string; // Links to DiffResult.section_id
+  changeId: string; // Links to DiffResult.id
   comments: Comment[];
 }
 
 interface DiscussionsState {
   discussions: Discussion[];
-  addDiscussion: (sectionId: string) => string; // Returns discussion ID
+  addDiscussion: (changeId: string) => string; // Returns discussion ID
   addComment: (discussionId: string, text: string, parentCommentId?: string) => void;
   editComment: (discussionId: string, commentId: string, text: string) => void;
   deleteComment: (discussionId: string, commentId: string) => void;
-  getDiscussion: (sectionId: string) => Discussion | undefined;
+  getDiscussion: (changeId: string) => Discussion | undefined;
   clearAll: () => void;
 }
 
@@ -35,15 +35,21 @@ export const useDiscussionsStore = create<DiscussionsState>()(
     (set, get) => ({
       discussions: [],
 
-      addDiscussion: (sectionId: string) => {
-        const existing = get().discussions.find((d) => d.sectionId === sectionId);
+      addDiscussion: (changeId: string) => {
+        // Validate changeId is provided
+        if (!changeId) {
+          console.error("addDiscussion called with empty changeId");
+          return generateId();
+        }
+
+        const existing = get().discussions.find((d) => d.changeId === changeId);
         if (existing) {
           return existing.id;
         }
 
         const newDiscussion: Discussion = {
           id: generateId(),
-          sectionId,
+          changeId,
           comments: [],
         };
 
@@ -154,8 +160,28 @@ export const useDiscussionsStore = create<DiscussionsState>()(
         }));
       },
 
-      getDiscussion: (sectionId: string) => {
-        return get().discussions.find((d) => d.sectionId === sectionId);
+      getDiscussion: (changeId: string) => {
+        // Validate changeId is provided
+        if (!changeId) {
+          console.error("getDiscussion called with empty changeId");
+          return undefined;
+        }
+
+        // Filter out any discussions with invalid format (migration from old sectionId format)
+        const discussions = get().discussions.filter((d) => {
+          if (!d.changeId && (d as any).sectionId) {
+            // Old format - remove it
+            return false;
+          }
+          return d.changeId;
+        });
+
+        // If we filtered out old discussions, update the store
+        if (discussions.length !== get().discussions.length) {
+          set({ discussions });
+        }
+
+        return discussions.find((d) => d.changeId === changeId);
       },
 
       clearAll: () => {
@@ -163,10 +189,23 @@ export const useDiscussionsStore = create<DiscussionsState>()(
       },
     }),
     {
-      name: "yaml-diff-discussions",
+      name: "yaml-diff-discussions-v2", // Changed key to force fresh start and avoid old sectionId data
       storage: typeof window !== "undefined"
         ? createJSONStorage(() => localStorage)
         : undefined,
+      // Migrate old data if it exists
+      migrate: (persistedState: any, version: number) => {
+        // Clear old data with sectionId format
+        if (persistedState?.discussions) {
+          const validDiscussions = persistedState.discussions.filter((d: any) => {
+            // Only keep discussions with changeId (new format)
+            return d.changeId && !d.sectionId;
+          });
+          return { ...persistedState, discussions: validDiscussions };
+        }
+        return persistedState;
+      },
+      version: 2, // Increment version to trigger migration
     }
   )
 );

@@ -21,9 +21,11 @@ export default function DiffView({ diff }: DiffViewProps) {
     <div className="space-y-4">
       <DiffSummary diff={diff} />
       <div className="px-6 py-4 space-y-4">
-        {diff.changes.map((change, index) => (
-          <ChangeCard key={`${change.section_id}-${index}`} change={change} index={index} />
-        ))}
+        {diff.changes.map((change, index) => {
+          // Ensure we have a valid key - use id if available, otherwise generate one
+          const key = change.id || `change-${change.section_id}-${change.change_type}-${index}`;
+          return <ChangeCard key={key} change={change} index={index} />;
+        })}
       </div>
     </div>
   );

@@ -298,13 +298,26 @@ The project includes Railway configuration files:
 
 ### Railway Start Command
 
-The start command is configured in `railway.json`:
+The start command is configured in `Procfile` (recommended) or `railway.json`:
 
-```bash
-uvicorn yaml_diffs.api_server.main:app --host 0.0.0.0 --port $PORT
+**Procfile**:
+```
+web: uvicorn yaml_diffs.api_server.main:app --host 0.0.0.0 --port $PORT
 ```
 
-**Note:** Railway installs the package, so the start command uses the installed package name `yaml_diffs` (not `src.yaml_diffs`). For local development from the project root, use `src.yaml_diffs.api_server.main:app`.
+**railway.json** (alternative):
+```json
+{
+  "deploy": {
+    "startCommand": "uvicorn yaml_diffs.api_server.main:app --host 0.0.0.0 --port $PORT"
+  }
+}
+```
+
+**Note:**
+- Railway installs the package, so the start command uses the installed package name `yaml_diffs` (not `src.yaml_diffs`)
+- For local development from the project root, use `src.yaml_diffs.api_server.main:app`
+- Railway/Nixpacks more reliably detects start commands from `Procfile` than from `railway.json`
 
 Railway automatically sets the `PORT` environment variable, which the application reads at startup.
 

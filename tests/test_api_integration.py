@@ -61,6 +61,8 @@ class TestAPIConsistency:
 
     def test_diff_and_format_consistency(self, examples_dir: Path):
         """Test that diff_and_format produces consistent results."""
+        import json
+
         v1_file = examples_dir / "document_v1.yaml"
         v2_file = examples_dir / "document_v2.yaml"
 
@@ -78,8 +80,18 @@ class TestAPIConsistency:
         diff = diff_documents(doc1, doc2)
         json_output2 = format_diff(diff, output_format="json")
 
-        # Should produce same results
-        assert json_output == json_output2
+        # Parse JSON and compare, ignoring id fields (which are randomly generated UUIDs)
+        data1 = json.loads(json_output)
+        data2 = json.loads(json_output2)
+
+        # Remove id fields from changes for comparison
+        for change in data1.get("changes", []):
+            change.pop("id", None)
+        for change in data2.get("changes", []):
+            change.pop("id", None)
+
+        # Should produce same results (except for randomly generated IDs)
+        assert data1 == data2
 
 
 @pytest.mark.integration

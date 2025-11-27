@@ -19,7 +19,7 @@ The project supports unlimited nesting, flexible structural markers, Hebrew cont
 - **Recursive Structure**: Documents use recursive sections with unlimited nesting depth
 - **Marker-Based Diffing**: Sections are matched by markers (not IDs) for reliable diffing across versions. All sections must have unique markers at each nesting level.
 - **Hebrew Support**: Full UTF-8 support for Hebrew legal text throughout
-- **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), REST API (`/api/v1/*`), and MCP Server
+- **Multiple Interfaces**: Library (Python), CLI (`yaml-diffs`), REST API (`/api/v1/*`), MCP Server, and Web UI (Next.js)
 - **Schema Validation**: Dual validation via OpenSpec (contract) and Pydantic (runtime)
 
 ## CI/CD Status
@@ -54,6 +54,25 @@ uv sync --extra dev
 pre-commit install
 ```
 
+### Environment Configuration
+
+For local development, you can configure environment variables using a `.env` file:
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your settings (optional)
+# The .env file includes the production API URL by default
+```
+
+The `.env.example` file includes:
+- **API Server Configuration**: PORT, HOST, LOG_LEVEL, etc.
+- **CORS Configuration**: CORS_ORIGINS, CORS_ALLOW_CREDENTIALS, etc.
+- **API Client Configuration**: `YAML_DIFFS_API_URL` (defaults to production: `https://yaml-diffs.up.railway.app`)
+
+**Note**: The `.env` file is for local development only. Railway deployments use environment variables set in the Railway dashboard.
+
 ## Project Structure
 
 ```
@@ -71,6 +90,12 @@ yaml-diffs/
 │       ├── cli/             # CLI tool
 │       ├── api_server/      # FastAPI REST API
 │       └── mcp_server/      # MCP server for AI assistants
+├── ui/                      # Next.js Web UI
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # React components
+│   ├── lib/                 # Utilities and API client
+│   ├── stores/              # Zustand state management
+│   └── package.json         # Node.js dependencies
 ├── tests/                   # Test suite
 ├── examples/                # Example YAML documents
 │   ├── minimal_document.yaml
@@ -167,6 +192,7 @@ yaml-diffs diff old.yaml new.yaml --output diff.json
 
 ### REST API
 
+**Local Development:**
 ```bash
 # Start API server
 uvicorn src.yaml_diffs.api_server.main:app --reload --port 8000
@@ -185,9 +211,22 @@ curl -X POST http://localhost:8000/api/v1/diff \
 curl http://localhost:8000/health
 ```
 
+**Production API:**
+The API is deployed at: **https://yaml-diffs.up.railway.app**
+
+```bash
+# Health check
+curl https://yaml-diffs.up.railway.app/health
+
+# Validate a document
+curl -X POST https://yaml-diffs.up.railway.app/api/v1/validate \
+  -H "Content-Type: application/json" \
+  -d '{"yaml": "document:\n  id: \"test\"\n  ..."}'
+```
+
 The API also provides interactive documentation:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+- **Local**: http://localhost:8000/docs (Swagger UI) and http://localhost:8000/redoc (ReDoc)
+- **Production**: https://yaml-diffs.up.railway.app/docs and https://yaml-diffs.up.railway.app/redoc
 
 ### MCP Server
 
@@ -209,11 +248,47 @@ yaml-diffs mcp-server --api-url http://api.example.com:8000 --api-key your-key
 - `health_check`: Check API health status
 
 **Configuration:**
-- `YAML_DIFFS_API_URL`: API base URL (default: `http://localhost:8000`)
-- `YAML_DIFFS_API_KEY`: Optional API key for authentication
-- `YAML_DIFFS_API_TIMEOUT`: Request timeout in seconds (default: `30`)
+- `YAML_DIFFS_API_URL`: API base URL (default: `http://localhost:8000`, or from `.env` file)
+- `YAML_DIFFS_API_KEY`: Optional API key for authentication (can be set in `.env` file)
+- `YAML_DIFFS_API_TIMEOUT`: Request timeout in seconds (default: `30`, can be set in `.env` file)
+
+These can be configured via environment variables or in a `.env` file (see [Environment Configuration](#environment-configuration)).
 
 For detailed MCP server documentation, see [docs/api/mcp_server.md](docs/api/mcp_server.md).
+
+### Web UI
+
+The Web UI provides a GitHub PR-style interface for viewing and commenting on YAML document diffs. Built with Next.js, it offers an intuitive way to compare document versions and discuss changes.
+
+**Quick Start:**
+
+```bash
+# Navigate to UI directory
+cd ui
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+The UI will be available at http://localhost:3000 by default.
+
+**Features:**
+- GitHub PR-style diff viewer with change cards
+- CodeMirror YAML editor with syntax highlighting and RTL support
+- Threaded discussions attached to individual changes
+- Character-level diff highlighting
+- JSON export of diff results and discussions
+
+**Configuration:**
+- `NEXT_PUBLIC_API_URL`: Railway API URL (default: `http://localhost:8000`)
+
+For detailed UI setup, deployment, and configuration instructions, see [ui/README.md](ui/README.md).
 
 ### Deployment
 

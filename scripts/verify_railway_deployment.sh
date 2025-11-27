@@ -1,25 +1,58 @@
 #!/bin/bash
 # Verification script for Railway deployment
 # Usage: ./scripts/verify_railway_deployment.sh [BASE_URL]
-# Example: ./scripts/verify_railway_deployment.sh https://yaml-diffs-production.up.railway.app
+# Example: ./scripts/verify_railway_deployment.sh https://yaml-diffs.up.railway.app
 # Or for internal: ./scripts/verify_railway_deployment.sh http://yaml_diffs.railway.internal
 
+# Source .env file if it exists (for local development)
+# This allows the script to use YAML_DIFFS_API_URL from .env as default
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    # Export variables from .env file
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
+fi
+
+# Get BASE_URL from command-line argument, environment variable, or error
 BASE_URL="${1:-}"
+
+# If no command-line argument, try to use YAML_DIFFS_API_URL from environment
 if [ -z "$BASE_URL" ]; then
-    echo "Error: No URL provided"
-    echo ""
-    echo "Usage: $0 <BASE_URL>"
-    echo ""
-    echo "Examples:"
-    echo "  $0 http://yaml_diffs.railway.internal  # Internal Railway URL (from Railway environment)"
-    echo "  $0 https://your-app.up.railway.app      # Public Railway URL"
-    echo "  $0 your-app.up.railway.app              # Protocol will be auto-detected (HTTPS for Railway)"
-    echo ""
-    echo "To get your Railway public URL:"
-    echo "  1. Go to Railway dashboard → Your service → Settings → Domains"
-    echo "  2. Or check the service URL in Railway dashboard"
-    echo ""
-    exit 1
+    if [ -n "$YAML_DIFFS_API_URL" ]; then
+        BASE_URL="$YAML_DIFFS_API_URL"
+        echo "Using API URL from environment: $BASE_URL"
+        echo ""
+    else
+        echo "Error: No URL provided"
+        echo ""
+        echo "Usage: $0 [BASE_URL]"
+        echo ""
+        echo "Arguments:"
+        echo "  BASE_URL   Optional. Base URL of the Railway deployment."
+        echo "             If not provided, uses YAML_DIFFS_API_URL from .env file"
+        echo "             or environment variable"
+        echo ""
+        echo "Examples:"
+        echo "  $0"
+        echo "    (uses YAML_DIFFS_API_URL from .env or environment)"
+        echo "  $0 https://yaml-diffs.up.railway.app"
+        echo "    (uses provided URL)"
+        echo "  $0 http://yaml_diffs.railway.internal  # Internal Railway URL"
+        echo "  $0 your-app.up.railway.app              # Protocol will be auto-detected (HTTPS for Railway)"
+        echo ""
+        echo "Environment Variables:"
+        echo "  YAML_DIFFS_API_URL  Base URL of the API (can be set in .env file)"
+        echo ""
+        echo "To get your Railway public URL:"
+        echo "  1. Go to Railway dashboard → Your service → Settings → Domains"
+        echo "  2. Or check the service URL in Railway dashboard"
+        echo ""
+        echo "Note: Create a .env file from .env.example to configure the API URL."
+        echo ""
+        exit 1
+    fi
 fi
 
 # Auto-detect protocol if not provided

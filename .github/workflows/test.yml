@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-      fail-fast: true
+      fail-fast: false
 
     steps:
       - name: Checkout code
@@ -24,10 +24,26 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Show Python and environment info
+        run: |
+          echo "Python version:"
+          python --version
+          echo "Python path:"
+          which python
+          echo "Python executable:"
+          python -c "import sys; print(sys.executable)"
+          echo "Platform:"
+          python -c "import platform; print(platform.platform())"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
+
+      - name: Show uv version
+        run: |
+          echo "uv version:"
+          uv --version
 
       - name: Validate uv.lock exists and is up to date
         run: |
@@ -37,9 +53,12 @@ jobs:
             exit 1
           fi
           echo "✅ uv.lock file found"
+          echo "Python version for lock check:"
+          python --version
           # Check if lock file is up to date (this will fail if pyproject.toml changed)
           uv lock --check || {
             echo "❌ Error: uv.lock is out of sync with pyproject.toml!"
+            echo "Python version: $(python --version)"
             echo "Please run 'uv lock' to update the lock file."
             exit 1
           }
@@ -57,14 +76,47 @@ jobs:
         timeout-minutes: 10
         run: |
           # Use uv sync for better dependency resolution (includes dev dependencies)
-          uv sync --extra dev
+          echo "Running uv sync --extra dev..."
+          uv sync --extra dev || {
+            echo "❌ uv sync failed!"
+            echo "Python version:"
+            python --version
+            echo "uv version:"
+            uv --version
+            exit 1
+          }
+          echo "✅ uv sync completed"
+          # Show installed packages
+          echo "Installed packages:"
+          uv pip list | head -20
           # Verify installation
-          uv run python -c "import yaml_diffs; print('✅ Package installed successfully')"
+          echo "Verifying package installation..."
+          uv run python -c "import yaml_diffs; print('✅ Package installed successfully')" || {
+            echo "❌ Package import failed!"
+            echo "Python version:"
+            python --version
+            echo "Python path:"
+            uv run python -c "import sys; print(sys.path)"
+            exit 1
+          }
 
       - name: Run tests with coverage
         timeout-minutes: 30
         run: |
-          uv run pytest --cov=src/yaml_diffs --cov-report=xml --cov-report=term --cov-report=term-missing -v
+          echo "Running tests with Python ${{ matrix.python-version }}..."
+          echo "Python version:"
+          uv run python --version
+          echo "pytest version:"
+          uv run pytest --version || echo "pytest not found"
+          echo "Starting test run..."
+          uv run pytest --cov=src/yaml_diffs --cov-report=xml --cov-report=term --cov-report=term-missing -v || {
+            echo "❌ Tests failed on Python ${{ matrix.python-version }}!"
+            echo "Python version:"
+            uv run python --version
+            echo "Installed packages:"
+            uv pip list
+            exit 1
+          }
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5

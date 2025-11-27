@@ -22,20 +22,37 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Validate pyproject.toml
+        run: |
+          # Check that pyproject.toml exists
+          if [ ! -f "pyproject.toml" ]; then
+            echo "❌ Error: pyproject.toml not found!"
+            exit 1
+          fi
+          # Validate TOML syntax (basic check)
+          python -c "import tomllib; f=open('pyproject.toml','rb'); tomllib.load(f); print('✅ pyproject.toml syntax valid')" || python -c "import tomli; f=open('pyproject.toml','rb'); tomli.load(f); print('✅ pyproject.toml syntax valid')" || echo "⚠️ Could not validate TOML syntax (this is OK if tomllib/tomli not available)"
+
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
           pip install build
 
       - name: Build package
+        timeout-minutes: 10
         run: |
           python -m build
 
       - name: Test package installation
+        timeout-minutes: 10
         run: |
+          # Install wheel (pip automatically installs dependencies from wheel metadata)
           pip install dist/yaml_diffs-*.whl
-          python -c "import yaml_diffs; print('Package installed successfully')"
-          python -c "from yaml_diffs import __version__; print(f'Package version: {__version__}')"
+          # Verify dependencies are installed (grep may not find all, that's OK)
+          echo "Installed packages:"
+          pip list | grep -E "(click|pydantic|pyyaml|fastapi|jsonschema|httpx|mcp|uvicorn)" || echo "Note: Some dependencies may not be listed above"
+          # Test basic import
+          python -c "import yaml_diffs; print('✅ Package installed successfully')"
+          python -c "from yaml_diffs import __version__; print(f'✅ Package version: {__version__}')"
           python -c "import yaml_diffs; assert hasattr(yaml_diffs, '__version__'), 'Package missing __version__ attribute'"
 
       - name: Test CLI commands

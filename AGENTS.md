@@ -48,6 +48,12 @@ uv sync --extra dev
 uv sync
 ```
 
+**Important:** After modifying `pyproject.toml` dependencies, always run:
+```bash
+uv lock
+```
+This updates `uv.lock` to reflect the new dependencies. CI workflows will fail if `uv.lock` is out of sync with `pyproject.toml`.
+
 ### Environment Variables
 
 For local development of the API server:
@@ -548,3 +554,4 @@ When making code changes, check:
 - **CI/CD Validation**: Always run `pytest`, `ruff check`, and `mypy` locally before pushing - CI will fail if these don't pass
 - **Python Version Compatibility**: Ensure code works on Python 3.10, 3.11, 3.12 (CI tests all versions)
 - **Pre-commit Consistency**: Pre-commit hooks are configured to match CI/CD checks. Both use the same configuration from `pyproject.toml`. If pre-commit passes but CI fails, check version differences or run `uv run mypy src/` locally to match CI exactly.
+- **Dependency Lock File**: After modifying `pyproject.toml` dependencies, always run `uv lock` to update `uv.lock`. CI workflows validate that `uv.lock` is in sync with `pyproject.toml` and will fail if it's outdated.

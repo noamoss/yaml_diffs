@@ -29,6 +29,22 @@ jobs:
         with:
           version: "latest"
 
+      - name: Validate uv.lock exists and is up to date
+        run: |
+          if [ ! -f "uv.lock" ]; then
+            echo "❌ Error: uv.lock file not found!"
+            echo "Please run 'uv lock' to generate the lock file."
+            exit 1
+          fi
+          echo "✅ uv.lock file found"
+          # Check if lock file is up to date (this will fail if pyproject.toml changed)
+          uv lock --check || {
+            echo "❌ Error: uv.lock is out of sync with pyproject.toml!"
+            echo "Please run 'uv lock' to update the lock file."
+            exit 1
+          }
+          echo "✅ uv.lock is up to date"
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -38,10 +54,15 @@ jobs:
             ${{ runner.os }}-python-${{ matrix.python-version }}-uv-
 
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
-          uv pip install --system -e ".[dev]"
+          # Use uv sync for better dependency resolution (includes dev dependencies)
+          uv sync --extra dev
+          # Verify installation
+          uv run python -c "import yaml_diffs; print('✅ Package installed successfully')"
 
       - name: Run tests with coverage
+        timeout-minutes: 30
         run: |
           uv run pytest --cov=src/yaml_diffs --cov-report=xml --cov-report=term --cov-report=term-missing -v
 

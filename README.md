@@ -215,6 +215,25 @@ yaml-diffs mcp-server --api-url http://api.example.com:8000 --api-key your-key
 
 For detailed MCP server documentation, see [docs/api/mcp_server.md](docs/api/mcp_server.md).
 
+### Deployment
+
+The REST API can be deployed to Railway with minimal configuration.
+
+**Quick Start:**
+
+1. Connect your GitHub repository to Railway
+2. Railway will automatically detect the Python project and deploy
+3. Configure environment variables in Railway dashboard (see [Deployment Guide](docs/operations/deployment.md))
+4. Your API will be available at the Railway-provided URL
+
+**Key Features:**
+- Automatic deployments on push to `main` branch
+- Health check monitoring via `/health` endpoint
+- Environment variable configuration via Railway dashboard
+- Production-ready with proper port binding and CORS support
+
+For detailed deployment instructions, troubleshooting, and production best practices, see the [Railway Deployment Guide](docs/operations/deployment.md).
+
 ## Documentation
 
 Comprehensive documentation is available in the `docs/` directory:
@@ -227,6 +246,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[Contributing](docs/developer/contributing.md)** - How to contribute to the project
 - **[REST API](docs/api/api_server.md)** - REST API documentation
 - **[MCP Server](docs/api/mcp_server.md)** - MCP server for AI assistants
+- **[Deployment](docs/operations/deployment.md)** - Railway deployment guide
 - **[CI/CD](docs/operations/ci_cd.md)** - Continuous integration and deployment workflows
 
 See the [Documentation Index](docs/README.md) for a complete overview.

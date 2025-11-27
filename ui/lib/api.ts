@@ -175,8 +175,11 @@ export async function diffDocuments(
           }
         }
 
-      } catch {
+      } catch (parseError) {
         // If JSON parsing fails, use status text
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to parse error response as JSON:', parseError);
+        }
         errorMessage = response.statusText || errorMessage;
       }
 

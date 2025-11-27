@@ -69,10 +69,10 @@ Railway will automatically:
 ### Step 4: Verify Deployment
 
 1. Wait for the deployment to complete (check the **Deployments** tab)
-2. Railway will provide a public URL (e.g., `https://your-app.up.railway.app`)
+2. Railway will provide a public URL (e.g., `https://yaml-diffs.up.railway.app`)
 3. Test the health endpoint:
    ```bash
-   curl https://your-app.up.railway.app/health
+   curl https://yaml-diffs.up.railway.app/health
    ```
    Expected response:
    ```json
@@ -84,12 +84,38 @@ Railway will automatically:
 4. Test the API endpoints:
    ```bash
    # Validate endpoint
-   curl -X POST https://your-app.up.railway.app/api/v1/validate \
+   curl -X POST https://yaml-diffs.up.railway.app/api/v1/validate \
      -H "Content-Type: application/json" \
      -d '{"yaml": "document:\n  id: \"test\"\n  title: \"Test\"\n  type: \"law\"\n  language: \"hebrew\"\n  version:\n    number: \"2024-01-01\"\n  source:\n    url: \"https://example.com\"\n    fetched_at: \"2024-01-01T00:00:00Z\"\n  sections: []"}'
    ```
 
+**Production API URL**: The deployed API is available at **https://yaml-diffs.up.railway.app**
+
+You can also use the verification script:
+```bash
+# Using the production URL from .env.example
+./scripts/verify_railway_deployment.sh
+
+# Or specify the URL directly
+./scripts/verify_railway_deployment.sh https://yaml-diffs.up.railway.app
+```
+
 ## Environment Configuration
+
+### Local Development
+
+For local development, use a `.env` file based on `.env.example`:
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your local settings
+# The .env.example includes the production API URL (https://yaml-diffs.up.railway.app)
+# by default for API client scripts
+```
+
+**Note**: The `.env` file is for local development only. Railway deployments use environment variables set in the Railway dashboard.
 
 ### Required Variables
 
@@ -184,7 +210,7 @@ If health checks are failing:
 1. **Check Logs**: View logs in Railway dashboard to see errors
 2. **Verify Endpoint**: Test `/health` endpoint manually:
    ```bash
-   curl https://your-app.up.railway.app/health
+   curl https://yaml-diffs.up.railway.app/health
    ```
 3. **Check Port Binding**: Ensure the service binds to `0.0.0.0` and uses `$PORT`
 4. **Check Startup Time**: Increase `healthcheckTimeout` if service takes longer to start

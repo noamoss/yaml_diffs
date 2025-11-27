@@ -245,7 +245,18 @@ The API uses standard HTTP status codes:
 
 ## Environment Variables
 
-The API server can be configured using environment variables:
+The API server can be configured using environment variables. For local development, use a `.env` file based on `.env.example`:
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your local settings
+```
+
+**Note**: The `.env` file is for local development only. Railway deployments use environment variables set in the Railway dashboard.
+
+### API Server Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -259,18 +270,25 @@ The API server can be configured using environment variables:
 | `APP_NAME` | `yaml-diffs API` | Application name |
 | `APP_VERSION` | `0.1.0` | Application version |
 
-### Example .env file
+### API Client Variables
 
-```bash
-PORT=8000
-HOST=0.0.0.0
-LOG_LEVEL=INFO
-# For local development with frontend (explicitly set - defaults to empty for security)
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-# For production (specific domains only)
-# CORS_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
-CORS_ALLOW_CREDENTIALS=true
-```
+These variables are used by client scripts and tools (e.g., `examples/diff_via_api.py`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `YAML_DIFFS_API_URL` | `http://localhost:8000` | Base URL for the yaml-diffs API. For production: `https://yaml-diffs.up.railway.app` |
+| `YAML_DIFFS_API_KEY` | `""` (empty) | Optional API key for authentication (if implemented in the future) |
+| `YAML_DIFFS_API_TIMEOUT` | `30` | Request timeout in seconds |
+
+### .env.example File
+
+The project includes a `.env.example` file with all available environment variables and their descriptions. This file includes:
+
+- API server configuration (PORT, HOST, LOG_LEVEL, CORS settings, etc.)
+- API client configuration (`YAML_DIFFS_API_URL` defaults to production: `https://yaml-diffs.up.railway.app`)
+- Comments explaining each variable
+
+See the `.env.example` file in the project root for the complete list of variables and their descriptions.
 
 ## Railway Deployment
 
@@ -338,8 +356,9 @@ For comprehensive deployment instructions, environment variable configuration, t
 
 ## Examples
 
-### Example 1: Validate a Document
+### Local Development
 
+**Example 1: Validate a Document**
 ```bash
 curl -X POST http://localhost:8000/api/v1/validate \
   -H "Content-Type: application/json" \
@@ -348,8 +367,7 @@ curl -X POST http://localhost:8000/api/v1/validate \
   }'
 ```
 
-### Example 2: Diff Two Documents
-
+**Example 2: Diff Two Documents**
 ```bash
 curl -X POST http://localhost:8000/api/v1/diff \
   -H "Content-Type: application/json" \
@@ -359,10 +377,37 @@ curl -X POST http://localhost:8000/api/v1/diff \
   }'
 ```
 
-### Example 3: Check Health
-
+**Example 3: Check Health**
 ```bash
 curl http://localhost:8000/health
+```
+
+### Production API
+
+The production API is available at **https://yaml-diffs.up.railway.app**
+
+**Example 1: Validate a Document (Production)**
+```bash
+curl -X POST https://yaml-diffs.up.railway.app/api/v1/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "yaml": "document:\n  id: \"law-1234\"\n  title: \"חוק הדוגמה\"\n  type: \"law\"\n  language: \"hebrew\"\n  version:\n    number: \"2024-01-01\"\n  source:\n    url: \"https://example.gov.il/law1234\"\n    fetched_at: \"2025-01-20T09:50:00Z\"\n  sections: []"
+  }'
+```
+
+**Example 2: Diff Two Documents (Production)**
+```bash
+curl -X POST https://yaml-diffs.up.railway.app/api/v1/diff \
+  -H "Content-Type: application/json" \
+  -d '{
+    "old_yaml": "document:\n  id: \"law-1234\"\n  ...",
+    "new_yaml": "document:\n  id: \"law-1234\"\n  ..."
+  }'
+```
+
+**Example 3: Check Health (Production)**
+```bash
+curl https://yaml-diffs.up.railway.app/health
 ```
 
 ### Example 4: Python Client

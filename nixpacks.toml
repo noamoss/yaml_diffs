@@ -1,6 +1,5 @@
 # Nixpacks configuration for Railway deployment
-[providers]
-python = "310"
+providers = ["python"]
 
 [phases.install]
 cmds = [

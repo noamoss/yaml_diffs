@@ -6,6 +6,7 @@ after installation. These tests verify the distribution configuration.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -48,13 +49,20 @@ def built_package() -> Generator[tuple[Path, Path], None, None]:
         for file in dist_dir.glob("yaml_diffs-*"):
             file.unlink()
     if build_dir.exists():
-        import shutil
-
         shutil.rmtree(build_dir)
 
     # Build the package
+    # Detect if uv is available and use it if so (for CI environments)
+    uv_path = shutil.which("uv")
+    if uv_path:
+        # Use uv run python -m build for uv-managed environments
+        build_cmd = [uv_path, "run", "python", "-m", "build"]
+    else:
+        # Fall back to sys.executable for non-uv environments
+        build_cmd = [sys.executable, "-m", "build"]
+
     result = subprocess.run(
-        [sys.executable, "-m", "build"],
+        build_cmd,
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,

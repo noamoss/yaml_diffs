@@ -353,4 +353,4 @@ print("Schema file accessible and loadable!")
     )
 
     assert result.returncode == 0, f"Schema access test failed: {result.stderr}"
-    assert "Schema file accessible!" in result.stdout
+    assert "Schema file accessible and loadable!" in result.stdout

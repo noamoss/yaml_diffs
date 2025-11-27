@@ -39,6 +39,7 @@ jobs:
           python -c "import yaml_diffs; assert hasattr(yaml_diffs, '__version__'), 'Package missing __version__ attribute'"
 
       - name: Test CLI commands
+        timeout-minutes: 5
         run: |
           # Test CLI version command
           yaml-diffs --version
@@ -46,10 +47,12 @@ jobs:
           yaml-diffs --help
 
       - name: Test library imports
+        timeout-minutes: 5
         run: |
           python -c "from yaml_diffs import (load_document, validate_document, diff_documents, format_diff, Document, Section, __version__); print('All main imports successful!'); print(f'Version: {__version__}')"
 
       - name: Test schema file access
+        timeout-minutes: 5
         run: |
           python -c "from yaml_diffs.schema import load_schema; schema = load_schema(); assert schema is not None; assert 'version' in schema or 'info' in schema; print('Schema file accessible and loadable!')"
 

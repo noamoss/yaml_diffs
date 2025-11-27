@@ -151,10 +151,10 @@ Check that the schema file is accessible:
 
 ```python
 python -c "
-from yaml_diffs.schema import legal_document_spec
-import os
-schema_path = os.path.join(os.path.dirname(legal_document_spec.__file__), 'legal_document_spec.yaml')
-assert os.path.exists(schema_path), 'Schema file not found'
+from yaml_diffs.schema import load_schema
+schema = load_schema()
+assert schema is not None
+assert 'version' in schema or 'info' in schema
 print('Schema file accessible!')
 "
 ```

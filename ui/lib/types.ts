@@ -22,6 +22,10 @@ export interface DiffResult {
   new_content: string | null;
   old_title: string | null;
   new_title: string | null;
+  old_section_yaml: string | null;
+  new_section_yaml: string | null;
+  old_line_number: number | null;
+  new_line_number: number | null;
 }
 
 export interface DocumentDiff {

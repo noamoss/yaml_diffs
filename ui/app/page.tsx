@@ -263,7 +263,7 @@ export default function Home() {
         ) : (
           <div>
             {diff ? (
-              <DiffView diff={diff} />
+              <DiffView diff={diff} oldYaml={oldYaml} newYaml={newYaml} />
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500">

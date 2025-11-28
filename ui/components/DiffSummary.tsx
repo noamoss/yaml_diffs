@@ -32,7 +32,7 @@ export default function DiffSummary({ diff }: DiffSummaryProps) {
           </span>
         </div>
         <div className="ml-auto text-gray-500">
-          Total: {diff.changes.length} changes
+          Total: {diff.added_count + diff.deleted_count + diff.modified_count + diff.moved_count} changes
         </div>
       </div>
     </div>

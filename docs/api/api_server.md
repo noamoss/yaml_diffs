@@ -132,6 +132,7 @@ Compares two YAML documents and returns detected changes.
   "diff": {
     "changes": [
       {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
         "section_id": "sec-1",
         "change_type": "content_changed",
         "marker": "1",
@@ -142,7 +143,11 @@ Compares two YAML documents and returns detected changes.
         "old_content": "Original content",
         "new_content": "Updated content",
         "old_title": "Section Title",
-        "new_title": "Section Title"
+        "new_title": "Section Title",
+        "old_section_yaml": "id: sec-1\nmarker: '1'\ntitle: Section Title\ncontent: Original content\nsections: []",
+        "new_section_yaml": "id: sec-1\nmarker: '1'\ntitle: Section Title\ncontent: Updated content\nsections: []",
+        "old_line_number": 23,
+        "new_line_number": 28
       }
     ],
     "added_count": 1,
@@ -152,6 +157,8 @@ Compares two YAML documents and returns detected changes.
   }
 }
 ```
+
+**Note:** The `old_section_yaml`, `new_section_yaml`, `old_line_number`, and `new_line_number` fields are populated by the API to provide the full YAML representation and line locations of each changed section. These fields enable UI clients to display section context without client-side YAML parsing.
 
 **Error Responses:**
 - `400 Bad Request` - Invalid YAML in either document

@@ -41,3 +41,36 @@ body {
   direction: rtl;
   text-align: right;
 }
+
+/* Discussion icon styling */
+.cm-discussion-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  cursor: pointer;
+  opacity: 0.8;
+  vertical-align: middle;
+  transition: opacity 0.2s;
+}
+
+.cm-discussion-icon:hover {
+  opacity: 1;
+}
+
+/* Discussion gutter icon styling */
+.cm-discussion-icon-gutter {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  opacity: 0.8;
+  vertical-align: middle;
+  transition: opacity 0.2s;
+}
+
+.cm-discussion-icon-gutter:hover {
+  opacity: 1;
+}
+
+.cm-discussion-gutter {
+  width: 20px;
+}

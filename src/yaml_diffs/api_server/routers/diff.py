@@ -8,7 +8,7 @@ from io import StringIO
 from fastapi import APIRouter, status
 
 from yaml_diffs.api_server.schemas import DiffRequest, DiffResponse
-from yaml_diffs.diff import diff_documents
+from yaml_diffs.diff import diff_documents, enrich_diff_with_yaml_extraction
 from yaml_diffs.loader import load_document
 
 router = APIRouter()
@@ -64,5 +64,8 @@ def diff_documents_endpoint(request: DiffRequest) -> DiffResponse:
 
     # Diff the documents
     diff = diff_documents(old_doc, new_doc)
+
+    # Enrich with YAML extraction and line numbers
+    enrich_diff_with_yaml_extraction(diff, request.old_yaml, request.new_yaml)
 
     return DiffResponse(diff=diff)

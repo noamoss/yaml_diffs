@@ -144,6 +144,12 @@ def diff_result_to_dict(change: DiffResult) -> dict[str, Any]:
     result["old_title"] = change.old_title
     result["new_title"] = change.new_title
 
+    # Add section YAML and line numbers
+    result["old_section_yaml"] = change.old_section_yaml
+    result["new_section_yaml"] = change.new_section_yaml
+    result["old_line_number"] = change.old_line_number
+    result["new_line_number"] = change.new_line_number
+
     return result
 
 

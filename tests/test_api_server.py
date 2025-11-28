@@ -175,6 +175,47 @@ def test_diff_endpoint_valid_documents(document_v1_content: str, document_v2_con
     assert diff["deleted_count"] >= 0
 
 
+def test_diff_endpoint_includes_extraction_fields(
+    document_v1_content: str, document_v2_content: str
+) -> None:
+    """Test that diff endpoint includes section YAML and line numbers in response."""
+    response = client.post(
+        "/api/v1/diff",
+        json={
+            "old_yaml": document_v1_content,
+            "new_yaml": document_v2_content,
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    diff = data["diff"]
+    assert len(diff["changes"]) > 0, "Expected at least one change"
+
+    # Check that at least one change has the extraction fields populated
+    has_extraction_data = False
+    for change in diff["changes"]:
+        # New fields should be present in the response
+        assert "old_section_yaml" in change, "Missing old_section_yaml field"
+        assert "new_section_yaml" in change, "Missing new_section_yaml field"
+        assert "old_line_number" in change, "Missing old_line_number field"
+        assert "new_line_number" in change, "Missing new_line_number field"
+
+        # At least some changes should have extraction data
+        if change.get("old_section_yaml") or change.get("new_section_yaml"):
+            has_extraction_data = True
+            # If we have section YAML, we should have line numbers too
+            if change.get("old_section_yaml"):
+                assert change.get("old_line_number") is not None, (
+                    "Missing old_line_number with old_section_yaml"
+                )
+            if change.get("new_section_yaml"):
+                assert change.get("new_line_number") is not None, (
+                    "Missing new_line_number with new_section_yaml"
+                )
+
+    assert has_extraction_data, "Expected at least one change with extraction data"
+
+
 def test_diff_endpoint_identical_documents(minimal_yaml_content: str) -> None:
     """Test diff endpoint with identical documents."""
     response = client.post(

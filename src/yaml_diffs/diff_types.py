@@ -43,6 +43,10 @@ class DiffResult(BaseModel):
         new_content: Content in new version
         old_title: Title in old version
         new_title: Title in new version
+        old_section_yaml: Full YAML representation of section in old version
+        new_section_yaml: Full YAML representation of section in new version
+        old_line_number: Starting line number in old document (1-indexed)
+        new_line_number: Starting line number in new document (1-indexed)
     """
 
     id: str = Field(
@@ -91,6 +95,22 @@ class DiffResult(BaseModel):
     new_title: str | None = Field(
         default=None,
         description="Title in new version",
+    )
+    old_section_yaml: str | None = Field(
+        default=None,
+        description="Full YAML representation of section in old version",
+    )
+    new_section_yaml: str | None = Field(
+        default=None,
+        description="Full YAML representation of section in new version",
+    )
+    old_line_number: int | None = Field(
+        default=None,
+        description="Starting line number in old document (1-indexed)",
+    )
+    new_line_number: int | None = Field(
+        default=None,
+        description="Starting line number in new document (1-indexed)",
     )
 
     model_config = {

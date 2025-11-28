@@ -389,15 +389,24 @@ Result of comparing two document versions.
 Represents a single change detected in document diffing.
 
 **Attributes:**
-- `section_id` (str): The section ID
+- `id` (str): Unique identifier for this change (UUID)
+- `section_id` (str): The section ID (for tracking, from old or new version)
 - `change_type` (ChangeType): Type of change detected
-- `marker` (str): The section marker
-- `old_marker_path` (Optional[tuple[str, ...]]): Marker path in old version
+- `marker` (str): The section marker (primary identifier)
+- `old_marker_path` (Optional[tuple[str, ...]]): Marker path in old version (markers from root)
 - `new_marker_path` (Optional[tuple[str, ...]]): Marker path in new version
+- `old_id_path` (Optional[list[str]]): ID path in old version (for tracking)
+- `new_id_path` (Optional[list[str]]): ID path in new version (for tracking)
 - `old_content` (Optional[str]): Content in old version
 - `new_content` (Optional[str]): Content in new version
 - `old_title` (Optional[str]): Title in old version
 - `new_title` (Optional[str]): Title in new version
+- `old_section_yaml` (Optional[str]): Full YAML representation of section in old version
+- `new_section_yaml` (Optional[str]): Full YAML representation of section in new version
+- `old_line_number` (Optional[int]): Starting line number in old document (1-indexed)
+- `new_line_number` (Optional[int]): Starting line number in new document (1-indexed)
+
+**Note:** The `old_section_yaml`, `new_section_yaml`, `old_line_number`, and `new_line_number` fields are populated when using the REST API's `/api/v1/diff` endpoint. They provide extracted section data and line locations to enable UI clients to display section context without client-side YAML parsing.
 
 ### `ChangeType`
 

@@ -233,11 +233,128 @@ def _find_moved_sections(
     return matches
 
 
+def _diff_document_metadata(old: Document, new: Document) -> list[DiffResult]:
+    """Compare document metadata fields and detect changes.
+
+    Args:
+        old: Old document version
+        new: New document version
+
+    Returns:
+        List of DiffResult entries for metadata changes
+    """
+    changes: list[DiffResult] = []
+
+    # Diff version fields
+    if old.version.number != new.version.number:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "version", "number"),
+                new_marker_path=("__metadata__", "version", "number"),
+                old_content=old.version.number,
+                new_content=new.version.number,
+            )
+        )
+    if old.version.description != new.version.description:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "version", "description"),
+                new_marker_path=("__metadata__", "version", "description"),
+                old_content=old.version.description or "",
+                new_content=new.version.description or "",
+            )
+        )
+
+    # Diff source fields
+    if old.source.url != new.source.url:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "source", "url"),
+                new_marker_path=("__metadata__", "source", "url"),
+                old_content=old.source.url,
+                new_content=new.source.url,
+            )
+        )
+    if old.source.fetched_at != new.source.fetched_at:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "source", "fetched_at"),
+                new_marker_path=("__metadata__", "source", "fetched_at"),
+                old_content=old.source.fetched_at,
+                new_content=new.source.fetched_at,
+            )
+        )
+
+    # Diff authors
+    old_authors_str = ", ".join(old.authors) if old.authors else ""
+    new_authors_str = ", ".join(new.authors) if new.authors else ""
+    if old_authors_str != new_authors_str:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "authors"),
+                new_marker_path=("__metadata__", "authors"),
+                old_content=old_authors_str,
+                new_content=new_authors_str,
+            )
+        )
+
+    # Diff dates
+    if old.published_date != new.published_date:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "published_date"),
+                new_marker_path=("__metadata__", "published_date"),
+                old_content=old.published_date or "",
+                new_content=new.published_date or "",
+            )
+        )
+    if old.updated_date != new.updated_date:
+        changes.append(
+            DiffResult(
+                id=str(uuid4()),
+                section_id="__metadata__",
+                change_type=ChangeType.CONTENT_CHANGED,
+                marker="__metadata__",
+                old_marker_path=("__metadata__", "updated_date"),
+                new_marker_path=("__metadata__", "updated_date"),
+                old_content=old.updated_date or "",
+                new_content=new.updated_date or "",
+            )
+        )
+
+    return changes
+
+
 def diff_documents(old: Document, new: Document) -> DocumentDiff:
     """Compare two Document versions and detect changes.
 
     Uses marker-based matching to detect additions, deletions, content changes,
     movements, and renames. Validates that markers are unique at each level.
+    Also diffs document-level metadata.
 
     Args:
         old: Old document version
@@ -421,6 +538,10 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
             )
         )
 
+    # Diff document metadata
+    metadata_changes = _diff_document_metadata(old, new)
+    changes.extend(metadata_changes)
+
     # Calculate counts
     added_count = sum(1 for c in changes if c.change_type == ChangeType.SECTION_ADDED)
     deleted_count = sum(1 for c in changes if c.change_type == ChangeType.SECTION_REMOVED)
@@ -438,3 +559,78 @@ def diff_documents(old: Document, new: Document) -> DocumentDiff:
         modified_count=modified_count,
         moved_count=moved_count,
     )
+
+
+def enrich_diff_with_yaml_extraction(
+    diff: DocumentDiff,
+    old_yaml: str | None = None,
+    new_yaml: str | None = None,
+) -> DocumentDiff:
+    """Enrich diff results with section YAML and line numbers.
+
+    This function extracts full section YAML and finds line numbers for each change,
+    enriching the DiffResult objects with old_section_yaml, new_section_yaml,
+    old_line_number, and new_line_number fields.
+
+    Args:
+        diff: DocumentDiff containing changes to enrich
+        old_yaml: Optional raw YAML text of old document
+        new_yaml: Optional raw YAML text of new document
+
+    Returns:
+        DocumentDiff with enriched changes (same object, modified in place)
+    """
+    from yaml_diffs.yaml_extract import (
+        extract_section_yaml,
+        find_metadata_line_number,
+        find_section_line_number,
+    )
+
+    # Parse documents once if YAML provided
+    old_parsed = None
+    new_parsed = None
+    if old_yaml:
+        try:
+            import yaml  # type: ignore[import-untyped]
+
+            old_parsed = yaml.safe_load(old_yaml)
+        except Exception:
+            old_parsed = None
+    if new_yaml:
+        try:
+            import yaml  # type: ignore[import-untyped]
+
+            new_parsed = yaml.safe_load(new_yaml)
+        except Exception:
+            new_parsed = None
+
+    # Enrich each change
+    for change in diff.changes:
+        # Check if this is a metadata change
+        is_metadata = (
+            change.marker == "__metadata__"
+            or (change.old_marker_path and change.old_marker_path[0] == "__metadata__")
+            or (change.new_marker_path and change.new_marker_path[0] == "__metadata__")
+        )
+
+        # Extract old section YAML and line number
+        if old_yaml and change.old_marker_path:
+            change.old_section_yaml = extract_section_yaml(
+                old_yaml, change.old_marker_path, old_parsed
+            )
+            if is_metadata:
+                change.old_line_number = find_metadata_line_number(old_yaml, change.old_marker_path)
+            else:
+                change.old_line_number = find_section_line_number(old_yaml, change.old_marker_path)
+
+        # Extract new section YAML and line number
+        if new_yaml and change.new_marker_path:
+            change.new_section_yaml = extract_section_yaml(
+                new_yaml, change.new_marker_path, new_parsed
+            )
+            if is_metadata:
+                change.new_line_number = find_metadata_line_number(new_yaml, change.new_marker_path)
+            else:
+                change.new_line_number = find_section_line_number(new_yaml, change.new_marker_path)
+
+    return diff

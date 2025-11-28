@@ -1,7 +1,12 @@
-/** Utility to extract sections from YAML documents by marker path. */
+/** Utility functions for working with YAML documents in the UI.
+ *
+ * Note: Section extraction and line number finding are now handled by the backend API.
+ * This file contains only UI-specific utilities that may be needed for client-side operations.
+ */
 
 /**
  * Extract a section from a parsed YAML object by following a marker path.
+ * This is a UI-only utility for client-side YAML manipulation if needed.
  *
  * @param doc - The parsed YAML document object
  * @param markerPath - Array of markers representing the path to the section
@@ -48,6 +53,7 @@ export function findSectionInDocument(
 /**
  * Convert a section object back to YAML string.
  * Uses js-yaml for serialization.
+ * This is a UI-only utility for client-side YAML manipulation if needed.
  *
  * @param section - The section object to serialize
  * @returns YAML string representation
@@ -69,46 +75,6 @@ export async function sectionToYaml(section: any): Promise<string | null> {
     });
   } catch (error) {
     console.error("Error serializing section to YAML:", error);
-    return null;
-  }
-}
-
-/**
- * Extract and serialize a section from YAML text by marker path.
- *
- * @param yamlText - The full YAML document as a string
- * @param markerPath - Array of markers representing the path to the section
- * @returns Promise resolving to the section as a YAML string, or null if not found
- */
-export async function extractSectionYaml(
-  yamlText: string,
-  markerPath: string[] | null
-): Promise<string | null> {
-  if (!markerPath || markerPath.length === 0 || !yamlText) {
-    return null;
-  }
-
-  try {
-    // Parse YAML
-    const yamlModule = await import("js-yaml");
-    const yaml = (yamlModule as any).default || yamlModule;
-    const doc = yaml.load(yamlText);
-
-    // Find the section
-    const section = findSectionInDocument(doc, markerPath);
-    if (!section) {
-      return null;
-    }
-
-    // Serialize back to YAML
-    return yaml.dump(section, {
-      indent: 2,
-      lineWidth: -1, // No line wrapping
-      quotingType: '"',
-      forceQuotes: false,
-    });
-  } catch (error) {
-    console.error("Error extracting section YAML:", error);
     return null;
   }
 }

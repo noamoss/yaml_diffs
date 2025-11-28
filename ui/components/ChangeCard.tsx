@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { DiffResult, ChangeType } from "@/lib/types";
 import { computeCharDiff, formatMarkerPath, DiffChunk } from "@/lib/diff-utils";
-import { extractSectionYaml } from "@/lib/yaml-extract";
 import { useDiscussionsStore } from "@/stores/discussions";
 import DiscussionThread from "./DiscussionThread";
 
@@ -126,7 +125,9 @@ function DiffContent({ oldContent, newContent }: DiffContentProps) {
     // Added content
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="text-sm text-gray-500 italic">(empty)</div>
+        <div className="bg-red-50 border border-red-200 rounded p-3">
+          <div className="text-sm text-gray-500 italic font-mono">(empty)</div>
+        </div>
         <div className="bg-green-50 border border-green-200 rounded p-3 overflow-x-auto">
           <pre className="whitespace-pre-wrap text-sm font-mono">
             {newContent}
@@ -145,7 +146,9 @@ function DiffContent({ oldContent, newContent }: DiffContentProps) {
             {oldContent}
           </pre>
         </div>
-        <div className="text-sm text-gray-500 italic">(empty)</div>
+        <div className="bg-green-50 border border-green-200 rounded p-3">
+          <div className="text-sm text-gray-500 italic font-mono">(empty)</div>
+        </div>
       </div>
     );
   }
@@ -184,9 +187,6 @@ export default function ChangeCard({ change, index, oldYaml, newYaml }: ChangeCa
   const [isExpanded, setIsExpanded] = useState(true);
   const [showDiscussion, setShowDiscussion] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [oldSectionYaml, setOldSectionYaml] = useState<string | null>(null);
-  const [newSectionYaml, setNewSectionYaml] = useState<string | null>(null);
-  const [loadingSections, setLoadingSections] = useState(false);
   const [showFullSection, setShowFullSection] = useState(false);
 
   const styles = getChangeTypeStyles(change.change_type);
@@ -244,41 +244,34 @@ export default function ChangeCard({ change, index, oldYaml, newYaml }: ChangeCa
     },
   };
 
-  // Extract section YAML when YAML files or marker paths change
-  useEffect(() => {
-    const extractSections = async () => {
-      if (!oldYaml && !newYaml) {
-        setOldSectionYaml(null);
-        setNewSectionYaml(null);
-        return;
+  // Detect if this is a metadata change
+  const isMetadataChange =
+    change.marker === "__metadata__" ||
+    change.old_marker_path?.[0] === "__metadata__" ||
+    change.new_marker_path?.[0] === "__metadata__";
+
+  // Use section YAML directly from API response
+  // Handle both null and undefined (API might return either)
+  const oldSectionYaml = change.old_section_yaml ?? null;
+  const newSectionYaml = change.new_section_yaml ?? null;
+  const oldLineNumber = change.old_line_number ?? null;
+  const newLineNumber = change.new_line_number ?? null;
+
+  // Create line number maps from the section YAML and line numbers
+  // For display purposes, we'll map line indices to actual line numbers
+  const createLineNumberMap = (yamlText: string | null, startLine: number | null): Map<number, number> => {
+    const map = new Map<number, number>();
+    if (yamlText && startLine) {
+      const lines = yamlText.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        map.set(i, startLine + i);
       }
+    }
+    return map;
+  };
 
-      setLoadingSections(true);
-      try {
-        if (oldYaml && change.old_marker_path) {
-          const oldSection = await extractSectionYaml(oldYaml, change.old_marker_path);
-          setOldSectionYaml(oldSection);
-        } else {
-          setOldSectionYaml(null);
-        }
-
-        if (newYaml && change.new_marker_path) {
-          const newSection = await extractSectionYaml(newYaml, change.new_marker_path);
-          setNewSectionYaml(newSection);
-        } else {
-          setNewSectionYaml(null);
-        }
-      } catch (error) {
-        console.error("Error extracting sections:", error);
-        setOldSectionYaml(null);
-        setNewSectionYaml(null);
-      } finally {
-        setLoadingSections(false);
-      }
-    };
-
-    extractSections();
-  }, [oldYaml, newYaml, change.old_marker_path, change.new_marker_path]);
+  const oldLineNumberMap = createLineNumberMap(oldSectionYaml, oldLineNumber);
+  const newLineNumberMap = createLineNumberMap(newSectionYaml, newLineNumber);
 
   const hasPathChange =
     JSON.stringify(change.old_marker_path) !==
@@ -288,7 +281,32 @@ export default function ChangeCard({ change, index, oldYaml, newYaml }: ChangeCa
     change.old_content !== change.new_content ||
     (change.old_content === null && change.new_content !== null) ||
     (change.old_content !== null && change.new_content === null);
-  const hasFullSection = oldSectionYaml !== null || newSectionYaml !== null;
+  // Use Boolean() to handle undefined, null, and empty strings
+  const hasFullSection = Boolean(oldSectionYaml) || Boolean(newSectionYaml);
+
+  // Check if extraction failed (no YAML provided by API)
+  // This can happen if the API server hasn't been updated with the extraction code
+  const extractionError: string | null =
+    (change.old_marker_path && !oldSectionYaml && change.change_type !== "section_added") ||
+    (change.new_marker_path && !newSectionYaml && change.change_type !== "section_removed")
+      ? `Section YAML not provided by API. If running locally, restart the API server. If using Railway, ensure the latest code is deployed.`
+      : null;
+
+  // Format metadata field path for display (e.g., ["__metadata__", "version", "number"] -> "Version Number")
+  const formatMetadataFieldPath = (path: string[] | null): string => {
+    if (!path || path.length === 0) return "Metadata";
+    // Remove "__metadata__" prefix and format
+    const parts = path.filter((p) => p !== "__metadata__");
+    if (parts.length === 0) return "Metadata";
+    // Capitalize first letter of each part and join
+    return parts
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  };
+
+  const metadataFieldPath = isMetadataChange
+    ? formatMetadataFieldPath(change.old_marker_path || change.new_marker_path)
+    : null;
 
   // Detect if sections are unchanged (identical YAML or change type is UNCHANGED)
   const isSectionUnchanged =
@@ -349,6 +367,32 @@ export default function ChangeCard({ change, index, oldYaml, newYaml }: ChangeCa
 
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4">
+          {isMetadataChange && (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                Metadata Change: {metadataFieldPath}
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-red-50 border border-red-200 rounded p-3">
+                  <div className="text-xs font-semibold text-gray-600 mb-1">Old Value:</div>
+                  <div className="text-sm font-mono text-gray-800">
+                    {change.old_content !== null && change.old_content !== undefined
+                      ? String(change.old_content)
+                      : "(empty)"}
+                  </div>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded p-3">
+                  <div className="text-xs font-semibold text-gray-600 mb-1">New Value:</div>
+                  <div className="text-sm font-mono text-gray-800">
+                    {change.new_content !== null && change.new_content !== undefined
+                      ? String(change.new_content)
+                      : "(empty)"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {hasTitleChange && (
             <div>
               <h4 className="text-sm font-semibold text-gray-700 mb-2">Title Change:</h4>
@@ -379,94 +423,132 @@ export default function ChangeCard({ change, index, oldYaml, newYaml }: ChangeCa
             </div>
           )}
 
-          {hasFullSection && (
-            <div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowFullSection(!showFullSection);
-                }}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 hover:text-gray-900"
+          {/* Always show Full Section YAML section, even if extraction failed */}
+          <div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowFullSection(!showFullSection);
+              }}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 hover:text-gray-900"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${
+                  showFullSection ? "rotate-90" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    showFullSection ? "rotate-90" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-                Full Section YAML
-              </button>
-              {showFullSection && (
-                <div className="mt-2">
-                  {loadingSections ? (
-                    <div className="text-sm text-gray-500 italic">Loading sections...</div>
-                  ) : isSectionUnchanged ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+              {isMetadataChange ? "Full Metadata YAML" : "Full Section YAML"}
+            </button>
+            {showFullSection && (
+              <div className="mt-2">
+                {hasFullSection ? (
+                  isSectionUnchanged ? (
                     // Unchanged section: show once with grey background
                     <div>
                       <h5 className="text-xs font-semibold text-gray-600 mb-1">Both Versions:</h5>
                       <div className="bg-gray-50 border border-gray-200 rounded p-3 overflow-x-auto">
                         <pre className="whitespace-pre-wrap text-xs font-mono text-gray-800">
-                          {oldSectionYaml || newSectionYaml}
+                          {(() => {
+                            const sectionYaml = oldSectionYaml || newSectionYaml;
+                            if (!sectionYaml) return "";
+                            return sectionYaml
+                              .split("\n")
+                              .map((line, idx) => {
+                                // Use the appropriate line number map (prefer old, fallback to new)
+                                const lineNum = oldLineNumberMap.get(idx) ?? newLineNumberMap.get(idx) ?? idx + 1;
+                                return `${String(lineNum).padStart(3, " ")}  ${line}`;
+                              })
+                              .join("\n");
+                          })()}
                         </pre>
                       </div>
                     </div>
                   ) : (
                     // Changed section: show side-by-side (old left, new right)
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {oldSectionYaml ? (
-                        <div>
-                          <h5 className="text-xs font-semibold text-gray-600 mb-1">Old Version:</h5>
-                          <div className="bg-red-50 border border-red-200 rounded p-3 overflow-x-auto">
+                      <div>
+                        <h5 className="text-xs font-semibold text-gray-600 mb-1">Old Version:</h5>
+                        <div className="bg-red-50 border border-red-200 rounded p-3 overflow-x-auto">
+                          {oldSectionYaml ? (
                             <pre className="whitespace-pre-wrap text-xs font-mono text-gray-800">
-                              {oldSectionYaml}
+                              {oldSectionYaml
+                                .split("\n")
+                                .map((line, idx) => {
+                                  const lineNum = oldLineNumberMap.get(idx) ?? idx + 1;
+                                  return `${String(lineNum).padStart(3, " ")}  ${line}`;
+                                })
+                                .join("\n")}
                             </pre>
-                          </div>
+                          ) : (
+                            <div className="text-xs text-gray-500 italic font-mono">(empty)</div>
+                          )}
                         </div>
-                      ) : (
-                        <div>
-                          <h5 className="text-xs font-semibold text-gray-600 mb-1">Old Version:</h5>
-                          <div className="bg-red-50 border border-red-200 rounded p-3">
-                            <div className="text-xs text-gray-500 italic">(empty)</div>
-                          </div>
-                        </div>
-                      )}
-                      {newSectionYaml ? (
-                        <div>
-                          <h5 className="text-xs font-semibold text-gray-600 mb-1">New Version:</h5>
-                          <div className="bg-green-50 border border-green-200 rounded p-3 overflow-x-auto">
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-semibold text-gray-600 mb-1">New Version:</h5>
+                        <div className="bg-green-50 border border-green-200 rounded p-3 overflow-x-auto">
+                          {newSectionYaml ? (
                             <pre className="whitespace-pre-wrap text-xs font-mono text-gray-800">
-                              {newSectionYaml}
+                              {newSectionYaml
+                                .split("\n")
+                                .map((line, idx) => {
+                                  const lineNum = newLineNumberMap.get(idx) ?? idx + 1;
+                                  return `${String(lineNum).padStart(3, " ")}  ${line}`;
+                                })
+                                .join("\n")}
                             </pre>
-                          </div>
+                          ) : (
+                            <div className="text-xs text-gray-500 italic font-mono">(empty)</div>
+                          )}
                         </div>
-                      ) : (
-                        <div>
-                          <h5 className="text-xs font-semibold text-gray-600 mb-1">New Version:</h5>
-                          <div className="bg-green-50 border border-green-200 rounded p-3">
-                            <div className="text-xs text-gray-500 italic">(empty)</div>
-                          </div>
-                        </div>
-                      )}
+                      </div>
                     </div>
-                  )}
-                  {!oldSectionYaml && !newSectionYaml && !loadingSections && (
-                    <div className="text-sm text-gray-500 italic">
+                  )
+                ) : (
+                  // Extraction failed - show helpful error message
+                  <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                    <div className="text-sm text-yellow-800 font-semibold mb-1">
                       Could not extract section YAML
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                    {extractionError && (
+                      <div className="text-xs text-yellow-700 mt-1">
+                        {extractionError}
+                      </div>
+                    )}
+                    <div className="text-xs text-yellow-600 mt-2">
+                      This may happen if:
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>The section marker path is incorrect or incomplete</li>
+                        <li>The section structure doesn't match the expected format</li>
+                        <li>The section was moved and the path tracking is inconsistent</li>
+                      </ul>
+                    </div>
+                    {(change.old_marker_path || change.new_marker_path) && (
+                      <div className="text-xs text-yellow-600 mt-2">
+                        <div className="font-semibold">Marker paths:</div>
+                        {change.old_marker_path && (
+                          <div dir="ltr">Old: {change.old_marker_path.join(" → ")}</div>
+                        )}
+                        {change.new_marker_path && (
+                          <div dir="ltr">New: {change.new_marker_path.join(" → ")}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="border-t border-gray-200 pt-4">
             <button

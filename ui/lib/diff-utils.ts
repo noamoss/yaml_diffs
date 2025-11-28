@@ -168,25 +168,123 @@ export async function computeLineDiff(
       }
     }
 
-    // Mark modified lines (lines that appear in both but with different content)
-    // This is a simplified approach - for true modified detection, we'd need
-    // more sophisticated matching. For now, we'll treat adjacent removed+added
-    // as potentially modified.
-    for (let i = 0; i < oldLines.length; i++) {
-      const oldLine = oldLines[i];
-      if (oldLine.type === "removed" && i + 1 < oldLines.length) {
-        const nextOldLine = oldLines[i + 1];
-        // Look for corresponding added line in newLines
-        for (let j = 0; j < newLines.length; j++) {
-          const newLine = newLines[j];
-          if (newLine.type === "added" && newLine.newLineNumber === oldLineNum) {
-            // Mark as modified if content is similar but different
-            oldLine.type = "modified";
-            newLine.type = "modified";
-            oldLine.newLineNumber = newLine.newLineNumber;
-            newLine.oldLineNumber = oldLine.oldLineNumber;
-            break;
+    // Post-process to better match lines and avoid false positives
+    // Comprehensive matching: match ALL identical lines regardless of position
+
+    // Build maps of all lines by exact content (for precise matching)
+    const oldContentMap = new Map<string, number[]>();
+    const newContentMap = new Map<string, number[]>();
+
+    oldLines.forEach((line, idx) => {
+      const content = line.content;
+      if (!oldContentMap.has(content)) {
+        oldContentMap.set(content, []);
+      }
+      oldContentMap.get(content)!.push(idx);
+    });
+
+    newLines.forEach((line, idx) => {
+      const content = line.content;
+      if (!newContentMap.has(content)) {
+        newContentMap.set(content, []);
+      }
+      newContentMap.get(content)!.push(idx);
+    });
+
+    // Match all identical lines: for each content that appears in both versions,
+    // match removed lines with added lines
+    const matchedOldIndices = new Set<number>();
+    const matchedNewIndices = new Set<number>();
+
+    // First pass: match removed lines with added lines (greedy, prefer closest positions)
+    for (const [content, oldIndices] of oldContentMap.entries()) {
+      const newIndices = newContentMap.get(content);
+      if (!newIndices || newIndices.length === 0) continue;
+
+      // For each old line with this content that's marked as removed/modified
+      for (const oldIdx of oldIndices) {
+        if (matchedOldIndices.has(oldIdx)) continue;
+
+        const oldLine = oldLines[oldIdx];
+        if (oldLine.type !== "removed" && oldLine.type !== "modified") continue;
+
+        // Find best matching new line (prefer closest position, prefer added over modified)
+        let bestMatch: number | null = null;
+        let bestScore = Infinity;
+
+        for (const newIdx of newIndices) {
+          if (matchedNewIndices.has(newIdx)) continue;
+
+          const newLine = newLines[newIdx];
+          if (newLine.type !== "added" && newLine.type !== "modified") continue;
+
+          // Score: distance + preference for added over modified
+          const distance = Math.abs(newIdx - oldIdx);
+          const typePenalty = newLine.type === "added" ? 0 : 1000;
+          const score = distance + typePenalty;
+
+          if (score < bestScore) {
+            bestScore = score;
+            bestMatch = newIdx;
           }
+        }
+
+        if (bestMatch !== null) {
+          const newLine = newLines[bestMatch];
+          // Mark both as unchanged and link them
+          oldLine.type = "unchanged";
+          newLine.type = "unchanged";
+          oldLine.newLineNumber = newLine.lineNumber;
+          newLine.oldLineNumber = oldLine.lineNumber;
+
+          matchedOldIndices.add(oldIdx);
+          matchedNewIndices.add(bestMatch);
+        }
+      }
+    }
+
+    // Second pass: catch any remaining unmatched lines (for cases where order matters less)
+    for (const [content, newIndices] of newContentMap.entries()) {
+      const oldIndices = oldContentMap.get(content);
+      if (!oldIndices || oldIndices.length === 0) continue;
+
+      // For each new line with this content that's marked as added/modified
+      for (const newIdx of newIndices) {
+        if (matchedNewIndices.has(newIdx)) continue;
+
+        const newLine = newLines[newIdx];
+        if (newLine.type !== "added" && newLine.type !== "modified") continue;
+
+        // Find best matching old line
+        let bestMatch: number | null = null;
+        let bestScore = Infinity;
+
+        for (const oldIdx of oldIndices) {
+          if (matchedOldIndices.has(oldIdx)) continue;
+
+          const oldLine = oldLines[oldIdx];
+          if (oldLine.type !== "removed" && oldLine.type !== "modified") continue;
+
+          const distance = Math.abs(oldIdx - newIdx);
+          const typePenalty = oldLine.type === "removed" ? 0 : 1000;
+          const score = distance + typePenalty;
+
+          if (score < bestScore) {
+            bestScore = score;
+            bestMatch = oldIdx;
+          }
+        }
+
+        if (bestMatch !== null) {
+          const oldLine = oldLines[bestMatch];
+          // Mark both as unchanged and link them
+          oldLine.type = "unchanged";
+          newLine.type = "unchanged";
+          oldLine.newLineNumber = newLine.lineNumber;
+          newLine.oldLineNumber = oldLine.lineNumber;
+
+          matchedOldIndices.add(bestMatch);
+          matchedNewIndices.add(newIdx);
         }
       }
     }

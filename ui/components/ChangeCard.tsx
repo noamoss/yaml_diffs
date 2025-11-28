@@ -56,9 +56,19 @@ function formatChangeType(changeType: ChangeType): string {
 }
 
 function renderDiffedText(chunks: DiffChunk[], type: "old" | "new") {
+  // Filter chunks based on side:
+  // - Old side: show only "removed" and "unchanged" chunks
+  // - New side: show only "added" and "unchanged" chunks
+  const filteredChunks = chunks.filter((chunk) => {
+    if (chunk.type === "unchanged") return true;
+    if (type === "old") return chunk.type === "removed";
+    if (type === "new") return chunk.type === "added";
+    return false;
+  });
+
   return (
     <pre className="whitespace-pre-wrap text-sm font-mono break-words">
-      {chunks.map((chunk, i) => {
+      {filteredChunks.map((chunk, i) => {
         if (chunk.type === "unchanged") {
           return <span key={i}>{chunk.text}</span>;
         }

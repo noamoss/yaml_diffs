@@ -78,19 +78,27 @@ export default function DiffView({ diff, oldYaml, newYaml }: DiffViewProps) {
         <SplitDiffView oldYaml={oldYaml} newYaml={newYaml} diff={diff} />
       ) : (
         <div className="px-6 py-4 space-y-4">
-          {diff.changes.map((change, index) => {
-            // Ensure we have a valid key - use id if available, otherwise generate one
-            const key = change.id || `change-${change.section_id}-${change.change_type}-${index}`;
-            return (
-              <ChangeCard
-                key={key}
-                change={change}
-                index={index}
-                oldYaml={oldYaml}
-                newYaml={newYaml}
-              />
-            );
-          })}
+          {diff.changes
+            .slice() // Create a copy to avoid mutating original
+            .sort((a, b) => {
+              // Sort by new line number, fall back to old line number for deleted sections
+              const aLine = a.new_line_number ?? a.old_line_number ?? Infinity;
+              const bLine = b.new_line_number ?? b.old_line_number ?? Infinity;
+              return aLine - bLine;
+            })
+            .map((change, index) => {
+              // Ensure we have a valid key - use id if available, otherwise generate one
+              const key = change.id || `change-${change.section_id}-${change.change_type}-${index}`;
+              return (
+                <ChangeCard
+                  key={key}
+                  change={change}
+                  index={index}
+                  oldYaml={oldYaml}
+                  newYaml={newYaml}
+                />
+              );
+            })}
         </div>
       )}
     </div>

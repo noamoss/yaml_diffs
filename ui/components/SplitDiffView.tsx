@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { EditorView, lineNumbers, Decoration, WidgetType, gutter, GutterMarker } from "@codemirror/view";
+import { EditorView, lineNumbers, Decoration, gutter, GutterMarker } from "@codemirror/view";
 import { EditorState, Extension, Range, RangeSet } from "@codemirror/state";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
 import { yaml } from "@codemirror/lang-yaml";
@@ -14,11 +14,6 @@ interface SplitDiffViewProps {
   oldYaml: string;
   newYaml: string;
   diff: DocumentDiff;
-}
-
-// Helper to escape regex special characters
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // Gutter marker to display discussion icon
